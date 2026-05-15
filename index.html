@@ -12,7 +12,6 @@ body{
     font-family:Arial, sans-serif;
 }
 
-/* BARRA SUPERIOR */
 #topBar{
     display:none;
     height:42px;
@@ -61,11 +60,6 @@ body{
     border:1px solid #777;
 }
 
-.windowBtn:hover{
-    background:#555;
-}
-
-/* ZONA DEL JUEGO */
 #gameWrapper{
     display:none;
     justify-content:center;
@@ -80,7 +74,6 @@ canvas{
     box-sizing:border-box;
 }
 
-/* MENÚ */
 #menu{
     position:absolute;
     width:100%;
@@ -118,21 +111,9 @@ h1{
     font-weight:bold;
 }
 
-.menuBtn:hover{
-    transform:scale(1.05);
-}
-
-#playBtn{
-    background:lime;
-}
-
-#settingsBtn{
-    background:orange;
-}
-
-#customizeBtn{
-    background:cyan;
-}
+#playBtn{ background:lime; }
+#settingsBtn{ background:orange; }
+#customizeBtn{ background:cyan; }
 
 .panel{
     display:none;
@@ -142,8 +123,8 @@ h1{
 }
 
 .optionBtn{
-    width:150px;
-    font-size:16px;
+    width:180px;
+    font-size:15px;
     padding:8px;
     border-radius:10px;
     border:none;
@@ -151,7 +132,12 @@ h1{
     cursor:pointer;
 }
 
-/* INFO */
+.optionBtn:disabled{
+    background:#555;
+    color:#aaa;
+    cursor:not-allowed;
+}
+
 #infoOverlay{
     display:none;
     position:absolute;
@@ -165,7 +151,9 @@ h1{
 }
 
 #infoBox{
-    width:420px;
+    width:620px;
+    max-height:85vh;
+    overflow:auto;
     background:#111;
     color:white;
     border:3px solid cyan;
@@ -195,6 +183,8 @@ h1{
 
 <body>
 
+<audio id="gameMusic" src="audio/Battle_theme_loopable.mp3" loop preload="auto"></audio>
+
 <div id="menu">
     <div id="menuBox">
         <h1>⚔️ SWORD GAME PRO ⚔️</h1>
@@ -214,11 +204,27 @@ h1{
 
         <div id="customizePanel" class="panel">
             <h2>🎨 Personalizar</h2>
+
             <p>Color del jugador:</p>
             <button class="optionBtn" id="blueColor">Azul</button>
             <button class="optionBtn" id="greenColor">Verde</button>
             <button class="optionBtn" id="purpleColor">Morado</button>
             <button class="optionBtn" id="whiteColor">Blanco</button>
+
+            <hr>
+
+            <p>Personaje:</p>
+            <button class="optionBtn" id="swordCharacter">Espadachín</button>
+            <button class="optionBtn" id="archerCharacter">Arquero 🔒 R5</button>
+            <button class="optionBtn" id="berserkerCharacter">Berserker 🔒 R10</button>
+            <button class="optionBtn" id="mageCharacter">Mago 🔒 R15</button>
+            <button class="optionBtn" id="lancerCharacter">Lancero 🔒 R20</button>
+            <button class="optionBtn" id="gladiatorCharacter">Gladiador 🔒 R25</button>
+
+            <p id="characterText">Personaje actual: Espadachín</p>
+            <p id="unlockText">Arquero: ronda 5 | Berserker: ronda 10 | Mago: ronda 15 | Lancero: ronda 20 | Gladiador: ronda 25</p>
+
+            <button class="optionBtn" id="resetUnlocksBtn">Borrar desbloqueos</button>
         </div>
     </div>
 </div>
@@ -246,14 +252,59 @@ h1{
 
         <p><b>Controles:</b></p>
         <p>WASD = mover</p>
-        <p>ESPACIO = atacar</p>
+        <p>ESPACIO = atacar / cargar ataque</p>
+        <p>P = pausar / continuar</p>
+        <p>I = abrir / cerrar información</p>
+        <p>Q = invocar gato desde ronda 10</p>
+        <p>4 = mejorar invocación</p>
 
         <hr>
 
-        <p><b>Tienda:</b></p>
-        <p>1 = Más daño (10 monedas)</p>
-        <p>2 = Más velocidad (10 monedas)</p>
-        <p>3 = Más vida (20 monedas)</p>
+        <p><b>Desbloqueo de personajes:</b></p>
+        <p>Espadachín = disponible desde el inicio.</p>
+        <p>Arquero = se desbloquea en ronda 5 y queda guardado.</p>
+        <p>Berserker = se desbloquea en ronda 10 y queda guardado.</p>
+        <p>Mago = se desbloquea en ronda 15 y queda guardado.</p>
+        <p>Lancero = se desbloquea en ronda 20 y queda guardado.</p>
+        <p>Gladiador = se desbloquea en ronda 25 y queda guardado.</p>
+
+        <hr>
+
+        <p><b>Personajes:</b></p>
+        <p>Espadachín = ataque cercano con espada.</p>
+        <p>Lancero = ataca con lanza de mayor alcance. Si mantienes ESPACIO, lanza la lanza como proyectil.</p>
+        <p>Gladiador = tiene doble vida, espada y escudo. Mantén ESPACIO para cargar la espada y hacer doble daño. Mantén E para bloquear ataques enemigos.</p>
+        <p>Arquero = dispara flechas. Mantén ESPACIO para cargar una flecha grande.</p>
+        <p>Berserker = usa hacha, es más lento y hace daño en área.</p>
+        <p>Mago = dispara rayos. Mantén ESPACIO para cargar y lanzar un rayo gigante.</p>
+
+        <hr>
+
+        <p><b>Cada 10 rondas:</b></p>
+        <p>Sale un mapa nuevo y tu personaje recibe x2 vida, x2 daño y x2 velocidad.</p>
+        <p>El bonus se aplica una sola vez por bloque: ronda 10, 20, 30, 40 y más.</p>
+        <p>También aumentan los límites máximos de mejoras.</p>
+        <p>Desde ronda 10 desbloqueas la invocación del gato.</p>
+
+        <hr>
+
+        <p><b>Mapas:</b></p>
+        <p>Rondas 1-9 = Bosque Oscuro.</p>
+        <p>Rondas 10-19 = Volcán de Lava.</p>
+        <p>Rondas 20-29 = Reino Helado.</p>
+        <p>Rondas 30-39 = Desierto Dorado.</p>
+        <p>Rondas 40-49 = Pantano Venenoso.</p>
+        <p>Rondas 50-59 = Ciudad Sombría.</p>
+        <p>Rondas 60-69 = Templo Celestial.</p>
+        <p>Ronda 70 en adelante = Abismo Final.</p>
+
+        <hr>
+
+        <p><b>Invocación:</b></p>
+        <p>El gato persigue al enemigo más cercano y lo ataca automáticamente.</p>
+        <p>Solo puedes invocarlo 1 vez por ronda.</p>
+        <p>Mejorar invocación aumenta daño y velocidad del gato.</p>
+        <p>Mejora invocación: <span id="infoSummonLevel"></span>/<span id="infoSummonMax"></span></p>
 
         <hr>
 
@@ -262,9 +313,9 @@ h1{
         <p>Velocidad: <span id="infoSpeed"></span></p>
         <p>Vida máxima: <span id="infoHp"></span></p>
 
-        <p>Mejora daño: <span id="infoDamageLevel"></span>/5</p>
-        <p>Mejora velocidad: <span id="infoSpeedLevel"></span>/5</p>
-        <p>Mejora vida: <span id="infoHpLevel"></span>/5</p>
+        <p>Mejora daño: <span id="infoDamageLevel"></span>/<span id="infoMaxLevel1"></span></p>
+        <p>Mejora velocidad: <span id="infoSpeedLevel"></span>/<span id="infoMaxLevel2"></span></p>
+        <p>Mejora vida: <span id="infoHpLevel"></span>/<span id="infoMaxLevel3"></span></p>
 
         <button id="closeInfo">CERRAR INFO</button>
     </div>
@@ -274,6 +325,16 @@ h1{
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
+const gameMusic = document.getElementById("gameMusic");
+gameMusic.volume = 0.35;
+
+function playGameMusic(){
+    gameMusic.loop = true;
+    gameMusic.play().catch(()=>{
+        // El navegador puede bloquear el audio hasta que el jugador haga clic o presione una tecla.
+    });
+}
+
 const menu = document.getElementById("menu");
 const topBar = document.getElementById("topBar");
 const gameWrapper = document.getElementById("gameWrapper");
@@ -282,7 +343,6 @@ const infoOverlay = document.getElementById("infoOverlay");
 const playBtn = document.getElementById("playBtn");
 const settingsBtn = document.getElementById("settingsBtn");
 const customizeBtn = document.getElementById("customizeBtn");
-
 const settingsPanel = document.getElementById("settingsPanel");
 const customizePanel = document.getElementById("customizePanel");
 
@@ -295,25 +355,55 @@ const normalSizeButton = document.getElementById("normalSizeButton");
 const maxButton = document.getElementById("maxButton");
 
 const difficultyText = document.getElementById("difficultyText");
+const characterText = document.getElementById("characterText");
+const unlockText = document.getElementById("unlockText");
+
+const archerCharacter = document.getElementById("archerCharacter");
+const berserkerCharacter = document.getElementById("berserkerCharacter");
+const mageCharacter = document.getElementById("mageCharacter");
+const lancerCharacter = document.getElementById("lancerCharacter");
+const gladiatorCharacter = document.getElementById("gladiatorCharacter");
+const resetUnlocksBtn = document.getElementById("resetUnlocksBtn");
 
 let gameStarted = false;
 let gamePaused = false;
+let infoOpen = false;
+let gameOverHandled = false;
 let screenMode = "normal";
 let enemyDamage = 0.08;
 
 let keys = {};
+
+let archerUnlocked = localStorage.getItem("archerUnlocked") === "true";
+let berserkerUnlocked = localStorage.getItem("berserkerUnlocked") === "true";
+let mageUnlocked = localStorage.getItem("mageUnlocked") === "true";
+let lancerUnlocked = localStorage.getItem("lancerUnlocked") === "true";
+let gladiatorUnlocked = localStorage.getItem("gladiatorUnlocked") === "true";
+
+let archerMessageTimer = 0;
+let berserkerMessageTimer = 0;
+let mageMessageTimer = 0;
+let lancerMessageTimer = 0;
+let gladiatorMessageTimer = 0;
 
 const player = {
     x:100,
     y:300,
     w:50,
     h:50,
+    baseW:50,
+    baseH:50,
     speed:5,
     hp:100,
     maxHp:100,
     attacking:false,
     color:"cyan",
-    direction:"right"
+    direction:"right",
+    character:"sword",
+    evolved:false,
+    ascended:false,
+    powerTier:0,
+    blocking:false
 };
 
 let upgrades = {
@@ -328,11 +418,56 @@ let upgradeLevels = {
     hp:0
 };
 
-const maxUpgradeLevel = 5;
+let maxUpgradeLevel = 10;
 
 let coins = 0;
 let round = 1;
 let enemies = [];
+let arrows = [];
+let enemyArrows = [];
+let lightningBolts = [];
+let thrownSpears = [];
+
+let chargingArrow = false;
+let arrowCharge = 0;
+const maxArrowCharge = 100;
+
+let chargingAxe = false;
+let axeCharge = 0;
+const maxAxeCharge = 100;
+let axeEffect = null;
+
+let chargingMagic = false;
+let magicCharge = 0;
+const maxMagicCharge = 100;
+let magicEffectTimer = 0;
+
+let chargingSpear = false;
+let spearCharge = 0;
+const maxSpearCharge = 100;
+let spearMeleeEffect = null;
+
+let chargingGladiatorSword = false;
+let gladiatorSwordCharge = 0;
+const maxGladiatorSwordCharge = 100;
+let gladiatorSwordEffect = null;
+
+let summonUnlocked = false;
+let summonUsedThisRound = false;
+let summonMessageTimer = 0;
+let evolutionMessageTimer = 0;
+let ascensionMessageTimer = 0;
+let cat = null;
+let summonLevel = 0;
+let maxSummonLevel = 15;
+
+function saveCharacterUnlocks(){
+    localStorage.setItem("archerUnlocked", archerUnlocked);
+    localStorage.setItem("berserkerUnlocked", berserkerUnlocked);
+    localStorage.setItem("mageUnlocked", mageUnlocked);
+    localStorage.setItem("lancerUnlocked", lancerUnlocked);
+    localStorage.setItem("gladiatorUnlocked", gladiatorUnlocked);
+}
 
 function setCanvasSize(mode){
     screenMode = mode;
@@ -376,6 +511,228 @@ window.addEventListener("resize",()=>{
     }
 });
 
+function updateCharacterUnlocks(){
+    if(round >= 5 && !archerUnlocked){
+        archerUnlocked = true;
+        archerMessageTimer = 220;
+        saveCharacterUnlocks();
+    }
+
+    if(round >= 10 && !berserkerUnlocked){
+        berserkerUnlocked = true;
+        berserkerMessageTimer = 220;
+        saveCharacterUnlocks();
+    }
+
+    if(round >= 15 && !mageUnlocked){
+        mageUnlocked = true;
+        mageMessageTimer = 220;
+        saveCharacterUnlocks();
+    }
+
+    if(round >= 20 && !lancerUnlocked){
+        lancerUnlocked = true;
+        lancerMessageTimer = 220;
+        saveCharacterUnlocks();
+    }
+
+    if(round >= 25 && !gladiatorUnlocked){
+        gladiatorUnlocked = true;
+        gladiatorMessageTimer = 220;
+        saveCharacterUnlocks();
+    }
+
+    updateCharacterButtons();
+}
+
+function updateCharacterButtons(){
+    archerCharacter.disabled = !archerUnlocked;
+    berserkerCharacter.disabled = !berserkerUnlocked;
+    mageCharacter.disabled = !mageUnlocked;
+    lancerCharacter.disabled = !lancerUnlocked;
+    gladiatorCharacter.disabled = !gladiatorUnlocked;
+
+    archerCharacter.innerText = archerUnlocked ? "Arquero" : "Arquero 🔒 R5";
+    berserkerCharacter.innerText = berserkerUnlocked ? "Berserker" : "Berserker 🔒 R10";
+    mageCharacter.innerText = mageUnlocked ? "Mago" : "Mago 🔒 R15";
+    lancerCharacter.innerText = lancerUnlocked ? "Lancero" : "Lancero 🔒 R20";
+    gladiatorCharacter.innerText = gladiatorUnlocked ? "Gladiador" : "Gladiador 🔒 R25";
+
+    unlockText.innerText =
+        "Arquero: " + (archerUnlocked ? "guardado" : "ronda 5") +
+        " | Berserker: " + (berserkerUnlocked ? "guardado" : "ronda 10") +
+        " | Mago: " + (mageUnlocked ? "guardado" : "ronda 15") +
+        " | Lancero: " + (lancerUnlocked ? "guardado" : "ronda 20") +
+        " | Gladiador: " + (gladiatorUnlocked ? "guardado" : "ronda 25");
+}
+
+function unlockUpgradeLimit(){
+    updateCharacterUnlocks();
+
+    let targetTier = Math.floor(round / 10);
+
+    maxUpgradeLevel = 10 + targetTier * 10;
+    maxSummonLevel = 15 + targetTier * 5;
+
+    if(round >= 10 && !summonUnlocked){
+        summonUnlocked = true;
+        summonMessageTimer = 240;
+    }
+
+    applyRoundPowerUps(targetTier);
+}
+
+function applyRoundPowerUps(targetTier){
+    while(player.powerTier < targetTier){
+        player.powerTier++;
+
+        upgrades.damage *= 2;
+        upgrades.speed *= 2;
+        upgrades.maxHp *= 2;
+
+        player.speed = upgrades.speed;
+        player.maxHp = upgrades.maxHp;
+        player.hp = player.maxHp;
+
+        let sizeMultiplier = 1 + player.powerTier * 0.25;
+        player.w = Math.round(player.baseW * sizeMultiplier);
+        player.h = Math.round(player.baseH * sizeMultiplier);
+
+        if(player.powerTier === 1){
+            player.evolved = true;
+            evolutionMessageTimer = 240;
+        }else{
+            player.ascended = true;
+            ascensionMessageTimer = 300;
+        }
+
+        keepPlayerInside();
+    }
+}
+
+function evolvePlayer(){
+    if(player.evolved) return;
+
+    player.evolved = true;
+
+    player.w = 70;
+    player.h = 70;
+
+    upgrades.damage += 30;
+    upgrades.speed += 1.5;
+    upgrades.maxHp += 80;
+
+    player.speed = upgrades.speed;
+    player.maxHp = upgrades.maxHp;
+    player.hp = player.maxHp;
+
+    evolutionMessageTimer = 240;
+
+    keepPlayerInside();
+}
+
+function ascendPlayer(){
+    if(player.ascended) return;
+
+    player.ascended = true;
+
+    player.w = 95;
+    player.h = 95;
+
+    upgrades.damage *= 2;
+    upgrades.speed *= 2;
+    upgrades.maxHp *= 2;
+
+    player.speed = upgrades.speed;
+    player.maxHp = upgrades.maxHp;
+    player.hp = player.maxHp;
+
+    ascensionMessageTimer = 300;
+
+    keepPlayerInside();
+}
+
+function resetGame(){
+    gameOverHandled = false;
+
+    player.x = 100;
+    player.y = 300;
+    player.w = player.baseW;
+    player.h = player.baseH;
+    player.speed = 5;
+    player.hp = 100;
+    player.maxHp = 100;
+    player.attacking = false;
+    player.direction = "right";
+    player.evolved = false;
+    player.ascended = false;
+    player.powerTier = 0;
+
+    if(player.character === "archer" && !archerUnlocked) player.character = "sword";
+    if(player.character === "berserker" && !berserkerUnlocked) player.character = "sword";
+    if(player.character === "mage" && !mageUnlocked) player.character = "sword";
+    if(player.character === "lancer" && !lancerUnlocked) player.character = "sword";
+    if(player.character === "gladiator" && !gladiatorUnlocked) player.character = "sword";
+    player.blocking = false;
+
+    updateCharacterText();
+
+    upgrades.damage = 25;
+    upgrades.speed = 5;
+    upgrades.maxHp = 100;
+
+    upgradeLevels.damage = 0;
+    upgradeLevels.speed = 0;
+    upgradeLevels.hp = 0;
+
+    coins = 0;
+    round = 1;
+    maxUpgradeLevel = 10;
+    maxSummonLevel = 15;
+
+    archerUnlocked = localStorage.getItem("archerUnlocked") === "true";
+    berserkerUnlocked = localStorage.getItem("berserkerUnlocked") === "true";
+    mageUnlocked = localStorage.getItem("mageUnlocked") === "true";
+    lancerUnlocked = localStorage.getItem("lancerUnlocked") === "true";
+    gladiatorUnlocked = localStorage.getItem("gladiatorUnlocked") === "true";
+
+    archerMessageTimer = 0;
+    berserkerMessageTimer = 0;
+    mageMessageTimer = 0;
+    lancerMessageTimer = 0;
+    gladiatorMessageTimer = 0;
+
+    arrows = [];
+    enemyArrows = [];
+    lightningBolts = [];
+    thrownSpears = [];
+    enemies = [];
+
+    stopCharges();
+    axeEffect = null;
+    spearMeleeEffect = null;
+    magicEffectTimer = 0;
+
+    summonUnlocked = false;
+    summonUsedThisRound = false;
+    summonMessageTimer = 0;
+    evolutionMessageTimer = 0;
+    cat = null;
+    summonLevel = 0;
+
+    updateCharacterButtons();
+    spawnEnemies();
+}
+
+function updateCharacterText(){
+    if(player.character === "sword") characterText.innerText = "Personaje actual: Espadachín";
+    if(player.character === "lancer") characterText.innerText = "Personaje actual: Lancero";
+    if(player.character === "gladiator") characterText.innerText = "Personaje actual: Gladiador";
+    if(player.character === "archer") characterText.innerText = "Personaje actual: Arquero";
+    if(player.character === "berserker") characterText.innerText = "Personaje actual: Berserker";
+    if(player.character === "mage") characterText.innerText = "Personaje actual: Mago";
+}
+
 function randomEnemyPosition(){
     let side = Math.floor(Math.random() * 4);
     let x = 0;
@@ -401,14 +758,23 @@ function randomEnemyPosition(){
         y = Math.random() * (canvas.height - 150);
     }
 
-    return {x, y};
+    return {x,y};
 }
 
 function spawnEnemies(){
+    unlockUpgradeLimit();
+
     enemies = [];
+    enemyArrows = [];
 
     for(let i=0;i<round + 2;i++){
         let pos = randomEnemyPosition();
+
+        let enemyType = "melee";
+
+        if(round >= 10 && Math.random() < 0.4){
+            enemyType = "archer";
+        }
 
         enemies.push({
             x:pos.x,
@@ -416,7 +782,9 @@ function spawnEnemies(){
             w:50,
             h:50,
             hp:40 + round*10,
-            speed:1 + round*0.2,
+            speed: enemyType === "archer" ? 0.45 + round*0.04 : 1 + round*0.2,
+            type:enemyType,
+            shootCooldown:Math.floor(Math.random() * 100) + 100,
             randomX:(Math.random() - 0.5) * 2,
             randomY:(Math.random() - 0.5) * 2,
             changeTimer:Math.floor(Math.random() * 80) + 40
@@ -424,6 +792,7 @@ function spawnEnemies(){
     }
 }
 
+updateCharacterButtons();
 spawnEnemies();
 
 playBtn.onclick = ()=>{
@@ -432,6 +801,8 @@ playBtn.onclick = ()=>{
     gameWrapper.style.display = "flex";
     gameStarted = true;
     gamePaused = false;
+
+    playGameMusic();
 };
 
 settingsBtn.onclick = ()=>{
@@ -441,6 +812,8 @@ settingsBtn.onclick = ()=>{
 };
 
 customizeBtn.onclick = ()=>{
+    updateCharacterButtons();
+
     customizePanel.style.display =
         customizePanel.style.display === "block" ? "none" : "block";
     settingsPanel.style.display = "none";
@@ -453,27 +826,15 @@ backButton.onclick = ()=>{
     infoOverlay.style.display = "none";
     gameStarted = false;
     gamePaused = false;
+    infoOpen = false;
 };
 
-infoButton.onclick = ()=>{
-    openInfo();
-};
+infoButton.onclick = ()=> toggleInfo();
+closeInfo.onclick = ()=> closeInfoPanel();
 
-closeInfo.onclick = ()=>{
-    closeInfoPanel();
-};
-
-minButton.onclick = ()=>{
-    setCanvasSize("min");
-};
-
-normalSizeButton.onclick = ()=>{
-    setCanvasSize("normal");
-};
-
-maxButton.onclick = ()=>{
-    setCanvasSize("max");
-};
+minButton.onclick = ()=> setCanvasSize("min");
+normalSizeButton.onclick = ()=> setCanvasSize("normal");
+maxButton.onclick = ()=> setCanvasSize("max");
 
 document.getElementById("easyBtn").onclick = ()=>{
     enemyDamage = 0.04;
@@ -490,41 +851,167 @@ document.getElementById("hardBtn").onclick = ()=>{
     difficultyText.innerText = "Dificultad actual: Difícil";
 };
 
-document.getElementById("blueColor").onclick = ()=>{
-    player.color = "cyan";
+document.getElementById("blueColor").onclick = ()=> player.color = "cyan";
+document.getElementById("greenColor").onclick = ()=> player.color = "lime";
+document.getElementById("purpleColor").onclick = ()=> player.color = "purple";
+document.getElementById("whiteColor").onclick = ()=> player.color = "white";
+
+document.getElementById("swordCharacter").onclick = ()=>{
+    player.character = "sword";
+    stopCharges();
+    updateCharacterText();
 };
 
-document.getElementById("greenColor").onclick = ()=>{
-    player.color = "lime";
+lancerCharacter.onclick = ()=>{
+    if(!lancerUnlocked) return;
+
+    player.character = "lancer";
+    stopCharges();
+    updateCharacterText();
 };
 
-document.getElementById("purpleColor").onclick = ()=>{
-    player.color = "purple";
+gladiatorCharacter.onclick = ()=>{
+    if(!gladiatorUnlocked) return;
+
+    player.character = "gladiator";
+    stopCharges();
+    player.maxHp = upgrades.maxHp * 2;
+    player.hp = player.maxHp;
+    updateCharacterText();
 };
 
-document.getElementById("whiteColor").onclick = ()=>{
-    player.color = "white";
+archerCharacter.onclick = ()=>{
+    if(!archerUnlocked) return;
+
+    player.character = "archer";
+    stopCharges();
+    updateCharacterText();
 };
+
+berserkerCharacter.onclick = ()=>{
+    if(!berserkerUnlocked) return;
+
+    player.character = "berserker";
+    stopCharges();
+    updateCharacterText();
+};
+
+mageCharacter.onclick = ()=>{
+    if(!mageUnlocked) return;
+
+    player.character = "mage";
+    stopCharges();
+    updateCharacterText();
+};
+
+resetUnlocksBtn.onclick = ()=>{
+    localStorage.removeItem("archerUnlocked");
+    localStorage.removeItem("berserkerUnlocked");
+    localStorage.removeItem("mageUnlocked");
+    localStorage.removeItem("lancerUnlocked");
+    localStorage.removeItem("gladiatorUnlocked");
+
+    archerUnlocked = false;
+    berserkerUnlocked = false;
+    mageUnlocked = false;
+    lancerUnlocked = false;
+    gladiatorUnlocked = false;
+
+    if(player.character === "archer" || player.character === "berserker" || player.character === "mage" || player.character === "lancer" || player.character === "gladiator"){
+        player.character = "sword";
+        updateCharacterText();
+    }
+
+    updateCharacterButtons();
+};
+
+function stopCharges(){
+    chargingArrow = false;
+    arrowCharge = 0;
+    chargingAxe = false;
+    axeCharge = 0;
+    chargingMagic = false;
+    magicCharge = 0;
+    chargingSpear = false;
+    spearCharge = 0;
+    chargingGladiatorSword = false;
+    gladiatorSwordCharge = 0;
+    player.blocking = false;
+}
+
+function togglePause(){
+    if(!gameStarted) return;
+    if(infoOpen) return;
+
+    gamePaused = !gamePaused;
+}
+
+function toggleInfo(){
+    if(!gameStarted) return;
+
+    if(infoOpen){
+        closeInfoPanel();
+    }else{
+        openInfo();
+    }
+}
 
 function openInfo(){
     gamePaused = true;
+    infoOpen = true;
     updateInfoText();
     infoOverlay.style.display = "flex";
 }
 
 function closeInfoPanel(){
     infoOverlay.style.display = "none";
+    infoOpen = false;
     gamePaused = false;
 }
 
 document.addEventListener("keydown",(e)=>{
     keys[e.key.toLowerCase()] = true;
 
-    if(e.code === "Space" && gameStarted && !gamePaused){
-        attack();
+    if(gameStarted){
+        playGameMusic();
     }
 
-    if(!gameStarted || gamePaused) return;
+    if(e.key.toLowerCase() === "p") togglePause();
+    if(e.key.toLowerCase() === "i") toggleInfo();
+
+    if(e.key.toLowerCase() === "e" && gameStarted && !gamePaused && player.character === "gladiator"){
+        player.blocking = true;
+    }
+
+    if(e.code === "Space" && gameStarted && !gamePaused && player.hp > 0){
+        e.preventDefault();
+
+        if(player.character === "sword"){
+            attack();
+        }
+
+        if(player.character === "lancer"){
+            chargingSpear = true;
+        }
+
+        if(player.character === "archer"){
+            chargingArrow = true;
+        }
+
+        if(player.character === "berserker"){
+            chargingAxe = true;
+        }
+
+        if(player.character === "mage"){
+            chargingMagic = true;
+        }
+
+        if(player.character === "gladiator"){
+            chargingGladiatorSword = true;
+        }
+    }
+
+    if(!gameStarted || gamePaused || player.hp <= 0) return;
 
     if(e.key === "1"){
         if(coins >= 10 && upgradeLevels.damage < maxUpgradeLevel){
@@ -557,43 +1044,90 @@ document.addEventListener("keydown",(e)=>{
             upgradeLevels.hp++;
         }
     }
+
+    if(e.key.toLowerCase() === "q"){
+        summonCat();
+    }
+
+    if(e.key === "4"){
+        if(summonUnlocked && coins >= 15 && summonLevel < maxSummonLevel){
+            coins -= 15;
+            summonLevel++;
+        }
+    }
 });
 
 document.addEventListener("keyup",(e)=>{
     keys[e.key.toLowerCase()] = false;
+
+    if(e.key.toLowerCase() === "e"){
+        player.blocking = false;
+    }
+
+    if(e.code === "Space" && gameStarted && !gamePaused && player.hp > 0){
+
+        if(player.character === "lancer" && chargingSpear){
+            if(spearCharge >= 45){
+                throwSpear();
+            }else{
+                lancerAttack();
+            }
+            chargingSpear = false;
+            spearCharge = 0;
+        }
+
+        if(player.character === "archer" && chargingArrow){
+            shootArrow();
+            chargingArrow = false;
+            arrowCharge = 0;
+        }
+
+        if(player.character === "berserker" && chargingAxe){
+            berserkerAttack();
+            chargingAxe = false;
+            axeCharge = 0;
+        }
+
+        if(player.character === "mage" && chargingMagic){
+            castLightning();
+            chargingMagic = false;
+            magicCharge = 0;
+        }
+
+        if(player.character === "gladiator" && chargingGladiatorSword){
+            gladiatorAttack();
+            chargingGladiatorSword = false;
+            gladiatorSwordCharge = 0;
+        }
+    }
 });
 
 function getSwordBox(){
-    let sword = {
-        x:player.x,
-        y:player.y,
-        w:40,
-        h:40
-    };
+    let sword = {x:player.x,y:player.y,w:40,h:40};
 
     if(player.direction === "right"){
         sword.x = player.x + player.w;
-        sword.y = player.y + 10;
+        sword.y = player.y + player.h/2 - 15;
         sword.w = 45;
         sword.h = 30;
     }
 
     if(player.direction === "left"){
         sword.x = player.x - 45;
-        sword.y = player.y + 10;
+        sword.y = player.y + player.h/2 - 15;
         sword.w = 45;
         sword.h = 30;
     }
 
     if(player.direction === "up"){
-        sword.x = player.x + 10;
+        sword.x = player.x + player.w/2 - 15;
         sword.y = player.y - 45;
         sword.w = 30;
         sword.h = 45;
     }
 
     if(player.direction === "down"){
-        sword.x = player.x + 10;
+        sword.x = player.x + player.w/2 - 15;
         sword.y = player.y + player.h;
         sword.w = 30;
         sword.h = 45;
@@ -602,11 +1136,60 @@ function getSwordBox(){
     return sword;
 }
 
+function getSpearBox(){
+    let reach = 95;
+    let width = 22;
+
+    if(player.direction === "right"){
+        return {
+            x: player.x + player.w,
+            y: player.y + player.h/2 - width/2,
+            w: reach,
+            h: width
+        };
+    }
+
+    if(player.direction === "left"){
+        return {
+            x: player.x - reach,
+            y: player.y + player.h/2 - width/2,
+            w: reach,
+            h: width
+        };
+    }
+
+    if(player.direction === "up"){
+        return {
+            x: player.x + player.w/2 - width/2,
+            y: player.y - reach,
+            w: width,
+            h: reach
+        };
+    }
+
+    return {
+        x: player.x + player.w/2 - width/2,
+        y: player.y + player.h,
+        w: width,
+        h: reach
+    };
+}
+
 function attack(){
     if(player.attacking) return;
 
     player.attacking = true;
 
+    if(player.character === "sword"){
+        swordAttack();
+    }
+
+    setTimeout(()=>{
+        player.attacking = false;
+    },180);
+}
+
+function swordAttack(){
     let sword = getSwordBox();
 
     enemies.forEach(enemy=>{
@@ -619,46 +1202,566 @@ function attack(){
             ){
                 enemy.hp -= upgrades.damage;
 
-                if(enemy.hp <= 0){
-                    coins += 5;
-                }
+                if(enemy.hp <= 0) coins += 5;
+            }
+        }
+    });
+}
+
+function gladiatorAttack(){
+    if(player.attacking) return;
+
+    player.attacking = true;
+
+    let sword = getSwordBox();
+    let chargePercent = gladiatorSwordCharge / maxGladiatorSwordCharge;
+    let damage = upgrades.damage;
+
+    if(chargePercent >= 0.7){
+        damage = upgrades.damage * 2;
+    }
+
+    gladiatorSwordEffect = {
+        x:sword.x,
+        y:sword.y,
+        w:sword.w,
+        h:sword.h,
+        life:12,
+        charged:chargePercent >= 0.7
+    };
+
+    enemies.forEach(enemy=>{
+        if(enemy.hp > 0){
+            if(
+                sword.x < enemy.x + enemy.w &&
+                sword.x + sword.w > enemy.x &&
+                sword.y < enemy.y + enemy.h &&
+                sword.y + sword.h > enemy.y
+            ){
+                enemy.hp -= damage;
+
+                if(enemy.hp <= 0) coins += 5;
             }
         }
     });
 
     setTimeout(()=>{
         player.attacking = false;
-    },150);
+    },220);
+}
+
+function lancerAttack(){
+    if(player.attacking) return;
+
+    player.attacking = true;
+
+    let spear = getSpearBox();
+
+    spearMeleeEffect = {
+        x: spear.x,
+        y: spear.y,
+        w: spear.w,
+        h: spear.h,
+        life: 10
+    };
+
+    enemies.forEach(enemy=>{
+        if(enemy.hp > 0){
+            if(
+                spear.x < enemy.x + enemy.w &&
+                spear.x + spear.w > enemy.x &&
+                spear.y < enemy.y + enemy.h &&
+                spear.y + spear.h > enemy.y
+            ){
+                enemy.hp -= upgrades.damage * 0.9;
+
+                if(enemy.hp <= 0) coins += 5;
+            }
+        }
+    });
+
+    setTimeout(()=>{
+        player.attacking = false;
+    },220);
+}
+
+function throwSpear(){
+    let dx = 0;
+    let dy = 0;
+
+    if(player.direction === "right") dx = 1;
+    if(player.direction === "left") dx = -1;
+    if(player.direction === "up") dy = -1;
+    if(player.direction === "down") dy = 1;
+
+    let chargePercent = spearCharge / maxSpearCharge;
+    let length = 60 + chargePercent * 55;
+    let thickness = 12 + chargePercent * 8;
+    let damage = upgrades.damage + 20 + chargePercent * 70;
+    let speed = 9 + chargePercent * 5;
+
+    let w = thickness;
+    let h = thickness;
+
+    if(dx !== 0){
+        w = length;
+        h = thickness;
+    }
+
+    if(dy !== 0){
+        w = thickness;
+        h = length;
+    }
+
+    thrownSpears.push({
+        x: player.x + player.w/2 - w/2,
+        y: player.y + player.h/2 - h/2,
+        w: w,
+        h: h,
+        dx: dx,
+        dy: dy,
+        speed: speed,
+        damage: damage,
+        life: 90,
+        hitEnemies: []
+    });
+}
+
+function berserkerAttack(){
+    if(player.attacking) return;
+
+    player.attacking = true;
+
+    let chargePercent = axeCharge / maxAxeCharge;
+    let areaSize = 80 + chargePercent * 110;
+    let damage = upgrades.damage * 0.6 + 10 + chargePercent * 45;
+
+    let area = {
+        x: player.x + player.w / 2 - areaSize / 2,
+        y: player.y + player.h / 2 - areaSize / 2,
+        w: areaSize,
+        h: areaSize
+    };
+
+    axeEffect = {
+        x: area.x,
+        y: area.y,
+        w: area.w,
+        h: area.h,
+        life: 14
+    };
+
+    enemies.forEach(enemy=>{
+        if(enemy.hp > 0){
+            if(
+                area.x < enemy.x + enemy.w &&
+                area.x + area.w > enemy.x &&
+                area.y < enemy.y + enemy.h &&
+                area.y + area.h > enemy.y
+            ){
+                enemy.hp -= damage;
+
+                if(enemy.hp <= 0) coins += 5;
+            }
+        }
+    });
+
+    setTimeout(()=>{
+        player.attacking = false;
+    },250);
+}
+
+function shootArrow(){
+    let dx = 0;
+    let dy = 0;
+
+    if(player.direction === "right") dx = 1;
+    if(player.direction === "left") dx = -1;
+    if(player.direction === "up") dy = -1;
+    if(player.direction === "down") dy = 1;
+
+    let chargePercent = arrowCharge / maxArrowCharge;
+    let size = 10 + chargePercent * 30;
+    let damage = upgrades.damage + chargePercent * 60;
+    let speed = 8 + chargePercent * 6;
+
+    arrows.push({
+        x:player.x + player.w/2 - size/2,
+        y:player.y + player.h/2 - size/2,
+        w:size,
+        h:size,
+        dx:dx,
+        dy:dy,
+        speed:speed,
+        damage:damage,
+        life:100
+    });
+}
+
+function castLightning(){
+    let dx = 0;
+    let dy = 0;
+
+    if(player.direction === "right") dx = 1;
+    if(player.direction === "left") dx = -1;
+    if(player.direction === "up") dy = -1;
+    if(player.direction === "down") dy = 1;
+
+    let chargePercent = magicCharge / maxMagicCharge;
+
+    let thickness = 12 + chargePercent * 45;
+    let length = 35 + chargePercent * 120;
+    let damage = upgrades.damage * 0.85 + 12 + chargePercent * 95;
+    let speed = 12 + chargePercent * 5;
+    let pierce = chargePercent >= 0.7;
+
+    let w = thickness;
+    let h = thickness;
+
+    if(dx !== 0){
+        w = length;
+        h = thickness;
+    }
+
+    if(dy !== 0){
+        w = thickness;
+        h = length;
+    }
+
+    lightningBolts.push({
+        x:player.x + player.w/2 - w/2,
+        y:player.y + player.h/2 - h/2,
+        w:w,
+        h:h,
+        dx:dx,
+        dy:dy,
+        speed:speed,
+        damage:damage,
+        life:70,
+        pierce:pierce,
+        hitEnemies:[]
+    });
+
+    magicEffectTimer = 12;
+}
+
+function enemyShoot(enemy){
+    let dx = player.x - enemy.x;
+    let dy = player.y - enemy.y;
+    let distance = Math.sqrt(dx*dx + dy*dy);
+
+    if(distance > 0){
+        dx /= distance;
+        dy /= distance;
+    }
+
+    enemyArrows.push({
+        x:enemy.x + enemy.w / 2,
+        y:enemy.y + enemy.h / 2,
+        w:12,
+        h:12,
+        dx:dx,
+        dy:dy,
+        speed:5,
+        damage:6 + round * 0.5,
+        life:160
+    });
+}
+
+function summonCat(){
+    if(!summonUnlocked) return;
+    if(summonUsedThisRound) return;
+    if(cat !== null) return;
+
+    summonUsedThisRound = true;
+
+    cat = {
+        x: player.x - 40,
+        y: player.y,
+        w: 35,
+        h: 35,
+        speed: 2.4 + summonLevel * 0.15,
+        damage: 8 + summonLevel * 4,
+        attackCooldown: 0
+    };
+}
+
+function updateCat(){
+    if(cat === null) return;
+
+    let aliveEnemies = enemies.filter(enemy=>enemy.hp > 0);
+    if(aliveEnemies.length === 0) return;
+
+    let target = aliveEnemies[0];
+    let bestDistance = Infinity;
+
+    aliveEnemies.forEach(enemy=>{
+        let dx = enemy.x - cat.x;
+        let dy = enemy.y - cat.y;
+        let distance = Math.sqrt(dx*dx + dy*dy);
+
+        if(distance < bestDistance){
+            bestDistance = distance;
+            target = enemy;
+        }
+    });
+
+    let dx = target.x - cat.x;
+    let dy = target.y - cat.y;
+    let distance = Math.sqrt(dx*dx + dy*dy);
+
+    if(distance > 0){
+        dx /= distance;
+        dy /= distance;
+    }
+
+    cat.x += dx * cat.speed;
+    cat.y += dy * cat.speed;
+
+    if(cat.attackCooldown > 0){
+        cat.attackCooldown--;
+    }
+
+    if(
+        cat.x < target.x + target.w &&
+        cat.x + cat.w > target.x &&
+        cat.y < target.y + target.h &&
+        cat.y + cat.h > target.y
+    ){
+        if(cat.attackCooldown <= 0){
+            target.hp -= cat.damage;
+            cat.attackCooldown = 35;
+
+            if(target.hp <= 0) coins += 5;
+        }
+    }
+}
+
+function updateProjectiles(){
+    arrows.forEach(arrow=>{
+        arrow.x += arrow.dx * arrow.speed;
+        arrow.y += arrow.dy * arrow.speed;
+        arrow.life--;
+
+        enemies.forEach(enemy=>{
+            if(enemy.hp > 0){
+                if(
+                    arrow.x < enemy.x + enemy.w &&
+                    arrow.x + arrow.w > enemy.x &&
+                    arrow.y < enemy.y + enemy.h &&
+                    arrow.y + arrow.h > enemy.y
+                ){
+                    enemy.hp -= arrow.damage;
+                    arrow.life = 0;
+                    if(enemy.hp <= 0) coins += 5;
+                }
+            }
+        });
+    });
+
+    arrows = arrows.filter(arrow=>{
+        return arrow.life > 0 &&
+        arrow.x > -50 &&
+        arrow.x < canvas.width + 50 &&
+        arrow.y > -50 &&
+        arrow.y < canvas.height + 50;
+    });
+
+    thrownSpears.forEach(spear=>{
+        spear.x += spear.dx * spear.speed;
+        spear.y += spear.dy * spear.speed;
+        spear.life--;
+
+        enemies.forEach(enemy=>{
+            if(enemy.hp > 0){
+                let alreadyHit = spear.hitEnemies.includes(enemy);
+
+                if(
+                    !alreadyHit &&
+                    spear.x < enemy.x + enemy.w &&
+                    spear.x + spear.w > enemy.x &&
+                    spear.y < enemy.y + enemy.h &&
+                    spear.y + spear.h > enemy.y
+                ){
+                    enemy.hp -= spear.damage;
+                    spear.hitEnemies.push(enemy);
+
+                    if(enemy.hp <= 0) coins += 5;
+                }
+            }
+        });
+    });
+
+    thrownSpears = thrownSpears.filter(spear=>{
+        return spear.life > 0 &&
+        spear.x > -150 &&
+        spear.x < canvas.width + 150 &&
+        spear.y > -150 &&
+        spear.y < canvas.height + 150;
+    });
+
+    lightningBolts.forEach(bolt=>{
+        bolt.x += bolt.dx * bolt.speed;
+        bolt.y += bolt.dy * bolt.speed;
+        bolt.life--;
+
+        enemies.forEach(enemy=>{
+            if(enemy.hp > 0){
+                let alreadyHit = bolt.hitEnemies.includes(enemy);
+
+                if(
+                    !alreadyHit &&
+                    bolt.x < enemy.x + enemy.w &&
+                    bolt.x + bolt.w > enemy.x &&
+                    bolt.y < enemy.y + enemy.h &&
+                    bolt.y + bolt.h > enemy.y
+                ){
+                    enemy.hp -= bolt.damage;
+                    bolt.hitEnemies.push(enemy);
+
+                    if(!bolt.pierce){
+                        bolt.life = 0;
+                    }
+
+                    if(enemy.hp <= 0) coins += 5;
+                }
+            }
+        });
+    });
+
+    lightningBolts = lightningBolts.filter(bolt=>{
+        return bolt.life > 0 &&
+        bolt.x > -150 &&
+        bolt.x < canvas.width + 150 &&
+        bolt.y > -150 &&
+        bolt.y < canvas.height + 150;
+    });
+
+    enemyArrows.forEach(arrow=>{
+        arrow.x += arrow.dx * arrow.speed;
+        arrow.y += arrow.dy * arrow.speed;
+        arrow.life--;
+
+        if(
+            arrow.x < player.x + player.w &&
+            arrow.x + arrow.w > player.x &&
+            arrow.y < player.y + player.h &&
+            arrow.y + arrow.h > player.y
+        ){
+            if(player.character === "gladiator" && player.blocking){
+                arrow.life = 0;
+            }else{
+                player.hp -= arrow.damage;
+                arrow.life = 0;
+            }
+        }
+    });
+
+    enemyArrows = enemyArrows.filter(arrow=>{
+        return arrow.life > 0 &&
+        arrow.x > -50 &&
+        arrow.x < canvas.width + 50 &&
+        arrow.y > -50 &&
+        arrow.y < canvas.height + 50;
+    });
 }
 
 function update(){
     if(gamePaused) return;
 
+    unlockUpgradeLimit();
+
+    let moveSpeed = player.speed;
+
+    if(player.character === "berserker"){
+        moveSpeed = player.speed * 0.72;
+    }
+
+    if(player.character === "mage"){
+        moveSpeed = player.speed * 0.9;
+    }
+
     if(keys["w"]){
-        player.y -= player.speed;
+        player.y -= moveSpeed;
         player.direction = "up";
     }
 
     if(keys["s"]){
-        player.y += player.speed;
+        player.y += moveSpeed;
         player.direction = "down";
     }
 
     if(keys["a"]){
-        player.x -= player.speed;
+        player.x -= moveSpeed;
         player.direction = "left";
     }
 
     if(keys["d"]){
-        player.x += player.speed;
+        player.x += moveSpeed;
         player.direction = "right";
     }
 
     keepPlayerInside();
 
+    if(chargingArrow){
+        arrowCharge += 2;
+        if(arrowCharge > maxArrowCharge) arrowCharge = maxArrowCharge;
+    }
+
+    if(chargingAxe){
+        axeCharge += 2;
+        if(axeCharge > maxAxeCharge) axeCharge = maxAxeCharge;
+    }
+
+    if(chargingMagic){
+        magicCharge += 2;
+        if(magicCharge > maxMagicCharge) magicCharge = maxMagicCharge;
+    }
+
+    if(chargingSpear){
+        spearCharge += 2;
+        if(spearCharge > maxSpearCharge) spearCharge = maxSpearCharge;
+    }
+
+    if(chargingGladiatorSword){
+        gladiatorSwordCharge += 2;
+        if(gladiatorSwordCharge > maxGladiatorSwordCharge) gladiatorSwordCharge = maxGladiatorSwordCharge;
+    }
+
+    if(axeEffect){
+        axeEffect.life--;
+        if(axeEffect.life <= 0) axeEffect = null;
+    }
+
+    if(spearMeleeEffect){
+        spearMeleeEffect.life--;
+        if(spearMeleeEffect.life <= 0) spearMeleeEffect = null;
+    }
+
+    if(gladiatorSwordEffect){
+        gladiatorSwordEffect.life--;
+        if(gladiatorSwordEffect.life <= 0) gladiatorSwordEffect = null;
+    }
+
+    if(magicEffectTimer > 0){
+        magicEffectTimer--;
+    }
+
+    updateCat();
+
+    if(summonMessageTimer > 0) summonMessageTimer--;
+    if(evolutionMessageTimer > 0) evolutionMessageTimer--;
+    if(ascensionMessageTimer > 0) ascensionMessageTimer--;
+    if(archerMessageTimer > 0) archerMessageTimer--;
+    if(berserkerMessageTimer > 0) berserkerMessageTimer--;
+    if(mageMessageTimer > 0) mageMessageTimer--;
+    if(lancerMessageTimer > 0) lancerMessageTimer--;
+    if(gladiatorMessageTimer > 0) gladiatorMessageTimer--;
+
+    updateProjectiles();
+
     enemies.forEach(enemy=>{
         if(enemy.hp > 0){
-
             enemy.changeTimer--;
 
             if(enemy.changeTimer <= 0){
@@ -669,15 +1772,37 @@ function update(){
 
             let dx = player.x - enemy.x;
             let dy = player.y - enemy.y;
-            let distance = Math.sqrt(dx * dx + dy * dy);
+            let distance = Math.sqrt(dx*dx + dy*dy);
 
             if(distance > 0){
                 dx /= distance;
                 dy /= distance;
             }
 
-            enemy.x += dx * enemy.speed + enemy.randomX;
-            enemy.y += dy * enemy.speed + enemy.randomY;
+            if(enemy.type === "melee"){
+                enemy.x += dx * enemy.speed + enemy.randomX;
+                enemy.y += dy * enemy.speed + enemy.randomY;
+            }
+
+            if(enemy.type === "archer"){
+                if(distance < 250){
+                    enemy.x -= dx * enemy.speed;
+                    enemy.y -= dy * enemy.speed;
+                }else if(distance > 350){
+                    enemy.x += dx * enemy.speed;
+                    enemy.y += dy * enemy.speed;
+                }
+
+                enemy.x += enemy.randomX * 0.4;
+                enemy.y += enemy.randomY * 0.4;
+
+                enemy.shootCooldown--;
+
+                if(enemy.shootCooldown <= 0){
+                    enemyShoot(enemy);
+                    enemy.shootCooldown = 120;
+                }
+            }
 
             if(enemy.x < 0) enemy.x = 0;
             if(enemy.y < 0) enemy.y = 0;
@@ -691,12 +1816,15 @@ function update(){
             }
 
             if(
+                enemy.type === "melee" &&
                 player.x < enemy.x + enemy.w &&
                 player.x + player.w > enemy.x &&
                 player.y < enemy.y + enemy.h &&
                 player.y + player.h > enemy.y
             ){
+                if(!(player.character === "gladiator" && player.blocking)){
                 player.hp -= enemyDamage;
+            }
             }
         }
     });
@@ -705,11 +1833,23 @@ function update(){
 
     if(alive.length === 0){
         round++;
-        player.hp += 20;
+        unlockUpgradeLimit();
 
-        if(player.hp > player.maxHp){
-            player.hp = player.maxHp;
-        }
+        player.hp += 20;
+        if(player.hp > player.maxHp) player.hp = player.maxHp;
+
+        arrows = [];
+        enemyArrows = [];
+        lightningBolts = [];
+        thrownSpears = [];
+
+        stopCharges();
+        axeEffect = null;
+        spearMeleeEffect = null;
+        magicEffectTimer = 0;
+
+        cat = null;
+        summonUsedThisRound = false;
 
         spawnEnemies();
     }
@@ -717,43 +1857,416 @@ function update(){
 
 function drawPlayer(){
     ctx.fillStyle = player.color;
-    ctx.fillRect(player.x,player.y,50,50);
+    ctx.fillRect(player.x,player.y,player.w,player.h);
 
     ctx.fillStyle = "black";
     ctx.fillRect(player.x+10,player.y+10,6,6);
-    ctx.fillRect(player.x+34,player.y+10,6,6);
+    ctx.fillRect(player.x+player.w-16,player.y+10,6,6);
 
     ctx.fillStyle = "white";
-    if(player.direction === "right"){
-        ctx.fillText(">", player.x + 18, player.y + 45);
-    }
-    if(player.direction === "left"){
-        ctx.fillText("<", player.x + 18, player.y + 45);
-    }
-    if(player.direction === "up"){
-        ctx.fillText("^", player.x + 18, player.y + 45);
-    }
-    if(player.direction === "down"){
-        ctx.fillText("v", player.x + 18, player.y + 45);
+    ctx.font = "20px Arial";
+
+    if(player.direction === "right") ctx.fillText(">", player.x + player.w/2 - 5, player.y + player.h - 8);
+    if(player.direction === "left") ctx.fillText("<", player.x + player.w/2 - 5, player.y + player.h - 8);
+    if(player.direction === "up") ctx.fillText("^", player.x + player.w/2 - 5, player.y + player.h - 8);
+    if(player.direction === "down") ctx.fillText("v", player.x + player.w/2 - 5, player.y + player.h - 8);
+
+    if(player.character === "archer"){
+        ctx.fillStyle = "brown";
+        ctx.fillRect(player.x + 12, player.y + player.h/2 - 3, player.w - 24, 6);
+        ctx.fillStyle = "white";
+        ctx.font = "14px Arial";
+        ctx.fillText("AR", player.x + 15, player.y - 5);
     }
 
-    if(player.attacking){
+    if(player.character === "sword"){
+        ctx.fillStyle = "white";
+        ctx.font = "14px Arial";
+        ctx.fillText("SW", player.x + 15, player.y - 5);
+    }
+
+    if(player.character === "lancer"){
+        ctx.fillStyle = "silver";
+
+        if(player.direction === "right") ctx.fillRect(player.x + player.w - 5, player.y + player.h/2 - 3, 45, 6);
+        if(player.direction === "left") ctx.fillRect(player.x - 40, player.y + player.h/2 - 3, 45, 6);
+        if(player.direction === "up") ctx.fillRect(player.x + player.w/2 - 3, player.y - 40, 6, 45);
+        if(player.direction === "down") ctx.fillRect(player.x + player.w/2 - 3, player.y + player.h - 5, 6, 45);
+
+        ctx.fillStyle = "white";
+        ctx.font = "14px Arial";
+        ctx.fillText("LN", player.x + 15, player.y - 5);
+    }
+
+    if(player.character === "gladiator"){
+        ctx.fillStyle = "yellow";
+        ctx.fillRect(player.x + player.w - 12, player.y + 10, 8, player.h - 20);
+
+        ctx.fillStyle = player.blocking ? "skyblue" : "gray";
+        ctx.fillRect(player.x - 16, player.y + player.h/2 - 18, 18, 36);
+
+        ctx.fillStyle = "white";
+        ctx.font = "14px Arial";
+        ctx.fillText("GL", player.x + 15, player.y - 5);
+    }
+
+    if(player.character === "berserker"){
+        ctx.fillStyle = "orange";
+        ctx.fillRect(player.x + player.w - 15, player.y + 10, 10, player.h - 20);
+        ctx.fillStyle = "gray";
+        ctx.fillRect(player.x + player.w - 25, player.y + 8, 22, 10);
+        ctx.fillStyle = "white";
+        ctx.font = "14px Arial";
+        ctx.fillText("BK", player.x + 15, player.y - 5);
+    }
+
+    if(player.character === "mage"){
+        ctx.fillStyle = "#6a5acd";
+        ctx.fillRect(player.x + player.w/2 - 5, player.y + 8, 10, player.h - 15);
+
+        ctx.fillStyle = "cyan";
+        ctx.fillRect(player.x + player.w/2 - 10, player.y + 5, 20, 8);
+
+        ctx.fillStyle = "white";
+        ctx.font = "14px Arial";
+        ctx.fillText("MG", player.x + 15, player.y - 5);
+    }
+
+    if(player.attacking && player.character === "sword"){
         let sword = getSwordBox();
         ctx.fillStyle = "yellow";
         ctx.fillRect(sword.x,sword.y,sword.w,sword.h);
     }
+
+    if(chargingArrow && player.character === "archer"){
+        let chargePercent = arrowCharge / maxArrowCharge;
+        let radius = 8 + chargePercent * 22;
+
+        ctx.fillStyle = "rgba(255,215,0,0.7)";
+        ctx.beginPath();
+        ctx.arc(player.x + player.w/2, player.y + player.h/2, radius, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    if(chargingAxe && player.character === "berserker"){
+        let chargePercent = axeCharge / maxAxeCharge;
+        let radius = 20 + chargePercent * 45;
+
+        ctx.strokeStyle = "orange";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(player.x + player.w/2, player.y + player.h/2, radius, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+
+    if(chargingMagic && player.character === "mage"){
+        let chargePercent = magicCharge / maxMagicCharge;
+        let radius = 12 + chargePercent * 50;
+
+        ctx.strokeStyle = "cyan";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(player.x + player.w/2, player.y + player.h/2, radius, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+
+    if(chargingSpear && player.character === "lancer"){
+        let chargePercent = spearCharge / maxSpearCharge;
+        let radius = 12 + chargePercent * 35;
+
+        ctx.strokeStyle = "silver";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(player.x + player.w/2, player.y + player.h/2, radius, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+
+    if(chargingGladiatorSword && player.character === "gladiator"){
+        let chargePercent = gladiatorSwordCharge / maxGladiatorSwordCharge;
+        let radius = 12 + chargePercent * 40;
+
+        ctx.strokeStyle = chargePercent >= 0.7 ? "red" : "yellow";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(player.x + player.w/2, player.y + player.h/2, radius, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+}
+
+function drawCat(){
+    if(cat === null) return;
+
+    ctx.fillStyle = "white";
+    ctx.fillRect(cat.x, cat.y, cat.w, cat.h);
+
+    ctx.fillStyle = "black";
+    ctx.fillRect(cat.x + 7, cat.y + 8, 5, 5);
+    ctx.fillRect(cat.x + 23, cat.y + 8, 5, 5);
+
+    ctx.fillStyle = "pink";
+    ctx.fillRect(cat.x + 15, cat.y + 18, 5, 5);
+
+    ctx.fillStyle = "white";
+    ctx.font = "13px Arial";
+    ctx.fillText("CAT", cat.x + 4, cat.y - 5);
 }
 
 function drawEnemy(enemy){
-    ctx.fillStyle = "red";
-    ctx.fillRect(enemy.x,enemy.y,50,50);
+    ctx.fillStyle = enemy.type === "archer" ? "purple" : "red";
+    ctx.fillRect(enemy.x,enemy.y,enemy.w,enemy.h);
 
     ctx.fillStyle = "black";
     ctx.fillRect(enemy.x+10,enemy.y+10,6,6);
     ctx.fillRect(enemy.x+34,enemy.y+10,6,6);
 
+    if(enemy.type === "archer"){
+        ctx.fillStyle = "white";
+        ctx.font = "14px Arial";
+        ctx.fillText("AR", enemy.x + 15, enemy.y - 5);
+    }
+
     ctx.fillStyle = "red";
     ctx.fillRect(enemy.x,enemy.y-10,enemy.hp,5);
+}
+
+function drawArrows(){
+    arrows.forEach(arrow=>{
+        ctx.fillStyle = "gold";
+        ctx.fillRect(arrow.x, arrow.y, arrow.w, arrow.h);
+    });
+}
+
+function drawSpears(){
+    thrownSpears.forEach(spear=>{
+        ctx.fillStyle = "silver";
+        ctx.fillRect(spear.x, spear.y, spear.w, spear.h);
+
+        ctx.strokeStyle = "white";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(spear.x, spear.y, spear.w, spear.h);
+    });
+
+    if(spearMeleeEffect){
+        ctx.fillStyle = "rgba(192,192,192,0.35)";
+        ctx.fillRect(spearMeleeEffect.x, spearMeleeEffect.y, spearMeleeEffect.w, spearMeleeEffect.h);
+
+        ctx.strokeStyle = "white";
+        ctx.lineWidth = 3;
+        ctx.strokeRect(spearMeleeEffect.x, spearMeleeEffect.y, spearMeleeEffect.w, spearMeleeEffect.h);
+    }
+}
+
+function drawLightning(){
+    lightningBolts.forEach(bolt=>{
+        ctx.fillStyle = bolt.pierce ? "rgba(0,255,255,0.9)" : "cyan";
+        ctx.fillRect(bolt.x, bolt.y, bolt.w, bolt.h);
+
+        ctx.strokeStyle = "white";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(bolt.x, bolt.y, bolt.w, bolt.h);
+    });
+
+    if(magicEffectTimer > 0){
+        ctx.strokeStyle = "cyan";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(player.x + player.w/2, player.y + player.h/2, 45, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+}
+
+function drawEnemyArrows(){
+    enemyArrows.forEach(arrow=>{
+        ctx.fillStyle = "violet";
+        ctx.fillRect(arrow.x, arrow.y, arrow.w, arrow.h);
+    });
+}
+
+function drawGladiatorSwordEffect(){
+    if(!gladiatorSwordEffect) return;
+
+    ctx.fillStyle = gladiatorSwordEffect.charged ? "rgba(255,0,0,0.45)" : "rgba(255,255,0,0.35)";
+    ctx.fillRect(gladiatorSwordEffect.x, gladiatorSwordEffect.y, gladiatorSwordEffect.w, gladiatorSwordEffect.h);
+
+    ctx.strokeStyle = gladiatorSwordEffect.charged ? "red" : "yellow";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(gladiatorSwordEffect.x, gladiatorSwordEffect.y, gladiatorSwordEffect.w, gladiatorSwordEffect.h);
+}
+
+function drawAxeEffect(){
+    if(!axeEffect) return;
+
+    ctx.fillStyle = "rgba(255,140,0,0.35)";
+    ctx.fillRect(axeEffect.x, axeEffect.y, axeEffect.w, axeEffect.h);
+
+    ctx.strokeStyle = "orange";
+    ctx.lineWidth = 4;
+    ctx.strokeRect(axeEffect.x, axeEffect.y, axeEffect.w, axeEffect.h);
+}
+
+function getCurrentMap(){
+    const maps = [
+        {
+            name:"Bosque Oscuro",
+            sky:"#1a1a1a",
+            ground:"#2e7d32",
+            detail:"#66bb6a",
+            type:"forest"
+        },
+        {
+            name:"Volcán de Lava",
+            sky:"#2b0b0b",
+            ground:"#5d1a00",
+            detail:"#ff5722",
+            type:"volcano"
+        },
+        {
+            name:"Reino Helado",
+            sky:"#10243d",
+            ground:"#b3e5fc",
+            detail:"#e1f5fe",
+            type:"ice"
+        },
+        {
+            name:"Desierto Dorado",
+            sky:"#3b2a10",
+            ground:"#c28f2c",
+            detail:"#ffd166",
+            type:"desert"
+        },
+        {
+            name:"Pantano Venenoso",
+            sky:"#102015",
+            ground:"#31572c",
+            detail:"#80b918",
+            type:"swamp"
+        },
+        {
+            name:"Ciudad Sombría",
+            sky:"#111827",
+            ground:"#374151",
+            detail:"#9ca3af",
+            type:"city"
+        },
+        {
+            name:"Templo Celestial",
+            sky:"#1e1b4b",
+            ground:"#6d28d9",
+            detail:"#c4b5fd",
+            type:"temple"
+        },
+        {
+            name:"Abismo Final",
+            sky:"#08000f",
+            ground:"#2d0036",
+            detail:"#ff00aa",
+            type:"abyss"
+        }
+    ];
+
+    let mapIndex = Math.floor(round / 10);
+
+    if(mapIndex >= maps.length){
+        mapIndex = maps.length - 1;
+    }
+
+    return maps[mapIndex];
+}
+
+function drawMap(){
+    let map = getCurrentMap();
+
+    ctx.fillStyle = map.sky;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    ctx.fillStyle = map.ground;
+    ctx.fillRect(0,canvas.height - 100,canvas.width,100);
+
+    ctx.fillStyle = map.detail;
+
+    if(map.type === "forest"){
+        for(let i=0;i<canvas.width;i+=110){
+            ctx.fillRect(i + 45, canvas.height - 155, 18, 55);
+            ctx.beginPath();
+            ctx.arc(i + 54, canvas.height - 165, 32, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    if(map.type === "volcano"){
+        for(let i=0;i<canvas.width;i+=100){
+            ctx.beginPath();
+            ctx.arc(i + 40, canvas.height - 60, 18, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    if(map.type === "ice"){
+        for(let i=0;i<canvas.width;i+=120){
+            ctx.beginPath();
+            ctx.moveTo(i, canvas.height - 100);
+            ctx.lineTo(i + 60, canvas.height - 170);
+            ctx.lineTo(i + 120, canvas.height - 100);
+            ctx.fill();
+        }
+    }
+
+    if(map.type === "desert"){
+        for(let i=0;i<canvas.width;i+=150){
+            ctx.beginPath();
+            ctx.arc(i + 75, canvas.height - 90, 70, Math.PI, 0);
+            ctx.fill();
+        }
+    }
+
+    if(map.type === "swamp"){
+        for(let i=0;i<canvas.width;i+=90){
+            ctx.fillRect(i + 20, canvas.height - 75, 50, 10);
+            ctx.beginPath();
+            ctx.arc(i + 45, canvas.height - 78, 16, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    if(map.type === "city"){
+        for(let i=0;i<canvas.width;i+=80){
+            let buildingHeight = 60 + (i % 160);
+            ctx.fillRect(i + 15, canvas.height - 100 - buildingHeight, 45, buildingHeight);
+        }
+    }
+
+    if(map.type === "temple"){
+        for(let i=0;i<canvas.width;i+=140){
+            ctx.fillRect(i + 55, canvas.height - 165, 25, 65);
+            ctx.beginPath();
+            ctx.moveTo(i + 25, canvas.height - 165);
+            ctx.lineTo(i + 68, canvas.height - 210);
+            ctx.lineTo(i + 110, canvas.height - 165);
+            ctx.fill();
+        }
+    }
+
+    if(map.type === "abyss"){
+        for(let i=0;i<canvas.width;i+=120){
+            ctx.beginPath();
+            ctx.arc(i + 60, canvas.height - 70, 28, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillRect(i + 55, canvas.height - 150, 10, 80);
+        }
+    }
+}
+
+function drawBigMessage(title, subtitle){
+    ctx.fillStyle = "rgba(0,0,0,0.70)";
+    ctx.fillRect(0, canvas.height / 2 - 85, canvas.width, 170);
+
+    ctx.fillStyle = "gold";
+    ctx.font = "42px Arial";
+    ctx.fillText(title, canvas.width / 2 - 270, canvas.height / 2 - 20);
+
+    ctx.fillStyle = "white";
+    ctx.font = "34px Arial";
+    ctx.fillText(subtitle, canvas.width / 2 - 260, canvas.height / 2 + 35);
 }
 
 function drawHud(){
@@ -764,18 +2277,122 @@ function drawHud(){
 
     ctx.fillStyle = "yellow";
     ctx.fillText("Monedas: " + coins,20,70);
+
+    ctx.fillStyle = "cyan";
+    ctx.font = "18px Arial";
+
+    let characterName = "Espadachín";
+    if(player.character === "lancer") characterName = "Lancero";
+    if(player.character === "gladiator") characterName = "Gladiador";
+    if(player.character === "archer") characterName = "Arquero";
+    if(player.character === "berserker") characterName = "Berserker";
+    if(player.character === "mage") characterName = "Mago";
+
+    ctx.fillText("Personaje: " + characterName,20,100);
+    ctx.fillText("Mapa: " + getCurrentMap().name,20,125);
+    ctx.fillText("Daño: " + upgradeLevels.damage + "/" + maxUpgradeLevel,20,150);
+    ctx.fillText("Velocidad: " + upgradeLevels.speed + "/" + maxUpgradeLevel,20,175);
+    ctx.fillText("Vida: " + upgradeLevels.hp + "/" + maxUpgradeLevel,20,200);
+
+    if(!archerUnlocked){
+        ctx.fillText("Arquero se desbloquea en ronda 5",20,225);
+    }else if(!berserkerUnlocked){
+        ctx.fillText("Arquero guardado",20,225);
+        ctx.fillText("Berserker se desbloquea en ronda 10",20,250);
+    }else if(!mageUnlocked){
+        ctx.fillText("Arquero y Berserker guardados",20,225);
+        ctx.fillText("Mago se desbloquea en ronda 15",20,250);
+    }else if(!lancerUnlocked){
+        ctx.fillText("Arquero, Berserker y Mago guardados",20,225);
+        ctx.fillText("Lancero se desbloquea en ronda 20",20,250);
+    }else{
+        ctx.fillText("Todos los personajes guardados",20,225);
+    }
+
+    if(summonUnlocked){
+        ctx.fillStyle = "white";
+        ctx.fillText("Invocación: " + summonLevel + "/" + maxSummonLevel,20,250);
+
+        if(summonUsedThisRound){
+            ctx.fillText("Gato: usado esta ronda",20,275);
+        }else{
+            ctx.fillText("Q = Invocar gato",20,275);
+        }
+
+        ctx.fillText("4 = Mejorar invocación (15 monedas)",20,300);
+    }
+
+    if(player.powerTier > 0){
+        ctx.fillStyle = player.powerTier >= 2 ? "gold" : "violet";
+        ctx.fillText("Poder de ronda 10 x " + player.powerTier,20,330);
+        ctx.fillText("Multiplicador total: x" + Math.pow(2, player.powerTier),20,355);
+        ctx.fillText("Mejoras máximas: " + maxUpgradeLevel + "/" + maxUpgradeLevel,20,380);
+    }
+
+    if(player.character === "archer" && chargingArrow){
+        ctx.fillStyle = "gold";
+        ctx.fillText("Cargando flecha: " + arrowCharge + "%",20,385);
+        ctx.fillStyle = "gray";
+        ctx.fillRect(20,395,150,12);
+        ctx.fillStyle = "gold";
+        ctx.fillRect(20,395,150 * (arrowCharge/maxArrowCharge),12);
+    }
+
+    if(player.character === "berserker" && chargingAxe){
+        ctx.fillStyle = "orange";
+        ctx.fillText("Cargando hacha: " + axeCharge + "%",20,385);
+        ctx.fillStyle = "gray";
+        ctx.fillRect(20,395,150,12);
+        ctx.fillStyle = "orange";
+        ctx.fillRect(20,395,150 * (axeCharge/maxAxeCharge),12);
+    }
+
+    if(player.character === "mage" && chargingMagic){
+        ctx.fillStyle = "cyan";
+        ctx.fillText("Cargando rayo: " + magicCharge + "%",20,385);
+        ctx.fillStyle = "gray";
+        ctx.fillRect(20,395,150,12);
+        ctx.fillStyle = "cyan";
+        ctx.fillRect(20,395,150 * (magicCharge/maxMagicCharge),12);
+    }
+
+    if(player.character === "lancer" && chargingSpear){
+        ctx.fillStyle = "silver";
+        ctx.fillText("Cargando lanza: " + spearCharge + "%",20,385);
+        ctx.fillStyle = "gray";
+        ctx.fillRect(20,395,150,12);
+        ctx.fillStyle = "silver";
+        ctx.fillRect(20,395,150 * (spearCharge/maxSpearCharge),12);
+    }
+
+    if(player.character === "gladiator" && chargingGladiatorSword){
+        ctx.fillStyle = "red";
+        ctx.fillText("Cargando espada: " + gladiatorSwordCharge + "%",20,420);
+        ctx.fillStyle = "gray";
+        ctx.fillRect(20,430,150,12);
+        ctx.fillStyle = "red";
+        ctx.fillRect(20,430,150 * (gladiatorSwordCharge/maxGladiatorSwordCharge),12);
+    }
+
+    if(player.character === "gladiator" && player.blocking){
+        ctx.fillStyle = "skyblue";
+        ctx.fillText("ESCUDO BLOQUEANDO",20,455);
+    }
 }
 
 function draw(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
-    ctx.fillStyle = "#1a1a1a";
-    ctx.fillRect(0,0,canvas.width,canvas.height);
-
-    ctx.fillStyle = "#2e7d32";
-    ctx.fillRect(0,canvas.height - 100,canvas.width,100);
+    drawMap();
 
     drawPlayer();
+    drawCat();
+    drawArrows();
+    drawSpears();
+    drawLightning();
+    drawEnemyArrows();
+    drawAxeEffect();
+    drawGladiatorSwordEffect();
 
     enemies.forEach(enemy=>{
         if(enemy.hp > 0){
@@ -785,7 +2402,39 @@ function draw(){
 
     drawHud();
 
-    if(gamePaused){
+    if(archerMessageTimer > 0){
+        drawBigMessage("PERSONAJE DESBLOQUEADO", "ARQUERO GUARDADO");
+    }
+
+    if(berserkerMessageTimer > 0){
+        drawBigMessage("PERSONAJE DESBLOQUEADO", "BERSERKER GUARDADO");
+    }
+
+    if(mageMessageTimer > 0){
+        drawBigMessage("PERSONAJE DESBLOQUEADO", "MAGO GUARDADO");
+    }
+
+    if(lancerMessageTimer > 0){
+        drawBigMessage("PERSONAJE DESBLOQUEADO", "LANCERO GUARDADO");
+    }
+
+    if(gladiatorMessageTimer > 0){
+        drawBigMessage("PERSONAJE DESBLOQUEADO", "GLADIADOR GUARDADO");
+    }
+
+    if(summonMessageTimer > 0){
+        drawBigMessage("PODER DESBLOQUEADO", "INVOCACIÓN ADQUIRIDA");
+    }
+
+    if(evolutionMessageTimer > 0){
+        drawBigMessage("NUEVO MAPA Y PODER", "x2 VIDA, DAÑO Y VELOCIDAD");
+    }
+
+    if(ascensionMessageTimer > 0){
+        drawBigMessage("NUEVO MAPA Y PODER", "x2 VIDA, DAÑO Y VELOCIDAD");
+    }
+
+    if(gamePaused && !infoOpen){
         ctx.fillStyle = "rgba(0,0,0,0.4)";
         ctx.fillRect(0,0,canvas.width,canvas.height);
 
@@ -799,8 +2448,8 @@ function draw(){
         ctx.font = "70px Arial";
         ctx.fillText("GAME OVER",canvas.width/2 - 200,canvas.height/2);
 
-        ctx.font = "40px Arial";
-        ctx.fillText("Llegaste a ronda " + round,canvas.width/2 - 190,canvas.height/2 + 70);
+        ctx.font = "34px Arial";
+        ctx.fillText("Reiniciando juego...",canvas.width/2 - 180,canvas.height/2 + 70);
     }
 }
 
@@ -812,12 +2461,27 @@ function updateInfoText(){
     document.getElementById("infoDamageLevel").innerText = upgradeLevels.damage;
     document.getElementById("infoSpeedLevel").innerText = upgradeLevels.speed;
     document.getElementById("infoHpLevel").innerText = upgradeLevels.hp;
+
+    document.getElementById("infoMaxLevel1").innerText = maxUpgradeLevel;
+    document.getElementById("infoMaxLevel2").innerText = maxUpgradeLevel;
+    document.getElementById("infoMaxLevel3").innerText = maxUpgradeLevel;
+
+    document.getElementById("infoSummonLevel").innerText = summonLevel;
+    document.getElementById("infoSummonMax").innerText = maxSummonLevel;
 }
 
 function loop(){
     if(gameStarted){
         if(player.hp > 0){
             update();
+        }else{
+            if(!gameOverHandled){
+                gameOverHandled = true;
+
+                setTimeout(()=>{
+                    resetGame();
+                },2000);
+            }
         }
 
         draw();
