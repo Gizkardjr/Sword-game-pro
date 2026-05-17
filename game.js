@@ -446,13 +446,6 @@ function showEnemySpecialAttackMessage(enemy){
     enemySpecialAttackMessageTimer = 90;
 }
 
-function getPlayerCenter(){
-    return {
-        x: player.x + player.w / 2,
-        y: player.y + player.h / 2
-    };
-}
-
 function getEnemyCenter(enemy){
     return {
         x: enemy.x + enemy.w / 2,
@@ -3842,7 +3835,7 @@ function getCurrentMap(){
         {name:"Abismo Final", sky:"#08000f", ground:"#2d0036", detail:"#ff00aa", type:"abyss"}
     ];
 
-    let mapIndex = Math.floor(round / 10);
+    let mapIndex = Math.floor((round - 1) / 10);
     if(mapIndex >= maps.length) mapIndex = maps.length - 1;
     return maps[mapIndex];
 }
