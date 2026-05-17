@@ -198,6 +198,188 @@ function makeWorldDecoration(seed, type, x, y, size){
     return {seed, type, x, y, size, depthY:y};
 }
 
+const SOLID_DECORATION_TYPES = new Set([
+    "tree","pineSnow","swampTree",
+    "rock","lavaRock","sandRock","voidRock","stone",
+    "cactus","deadTree","stump","crate",
+    "pillar","obelisk","statue",
+    "crystalRed","crystalPurple","iceCrystal",
+    "ruin","house"
+]);
+
+function isSolidDecoration(decor){
+    return decor && SOLID_DECORATION_TYPES.has(decor.type);
+}
+
+function getDecorationObstacleBox(decor){
+    if(!isSolidDecoration(decor)) return null;
+
+    const s = decor.size || 1;
+    const x = decor.x;
+    const y = decor.y;
+
+    if(decor.type === "tree" || decor.type === "pineSnow" || decor.type === "swampTree"){
+        return {x:x - 18*s, y:y - 52*s, w:36*s, h:60*s};
+    }
+
+    if(decor.type === "cactus" || decor.type === "deadTree"){
+        return {x:x - 20*s, y:y - 58*s, w:40*s, h:66*s};
+    }
+
+    if(decor.type === "pillar" || decor.type === "obelisk" || decor.type === "statue"){
+        return {x:x - 20*s, y:y - 74*s, w:40*s, h:82*s};
+    }
+
+    if(decor.type === "crystalRed" || decor.type === "crystalPurple" || decor.type === "iceCrystal"){
+        return {x:x - 22*s, y:y - 62*s, w:44*s, h:68*s};
+    }
+
+    if(decor.type === "ruin" || decor.type === "house"){
+        return {x:x - 38*s, y:y - 70*s, w:76*s, h:76*s};
+    }
+
+    if(decor.type === "stump" || decor.type === "crate"){
+        return {x:x - 24*s, y:y - 34*s, w:48*s, h:42*s};
+    }
+
+    // Piedras y rocas bajas.
+    return {x:x - 28*s, y:y - 34*s, w:56*s, h:42*s};
+}
+
+function getEntityCollisionBox(entity){
+    if(!entity) return {x:0,y:0,w:0,h:0};
+
+    const shrinkX = Math.max(3, entity.w * 0.16);
+    const topCut = Math.max(4, entity.h * 0.20);
+    const bottomCut = Math.max(2, entity.h * 0.06);
+
+    return {
+        x:entity.x + shrinkX,
+        y:entity.y + topCut,
+        w:Math.max(8, entity.w - shrinkX * 2),
+        h:Math.max(8, entity.h - topCut - bottomCut)
+    };
+}
+
+function boxesOverlap(a,b){
+    return a.x < b.x + b.w &&
+        a.x + a.w > b.x &&
+        a.y < b.y + b.h &&
+        a.y + a.h > b.y;
+}
+
+function isDecorationBoxInSafeArea(box){
+    const worldW = getWorldWidth();
+    const worldH = getWorldHeight();
+    const safeAreas = [
+        // Inicio del jugador.
+        {x:0, y:0, w:420, h:520},
+        // Centro donde suelen aparecer los jefes y portales.
+        {x:worldW/2 - 260, y:worldH/2 - 260, w:520, h:520}
+    ];
+
+    return safeAreas.some(area=>boxesOverlap(box, area));
+}
+
+function collidesWithWorldObstacle(entity){
+    const entityBox = getEntityCollisionBox(entity);
+
+    for(const decor of worldDecorations){
+        const obstacleBox = getDecorationObstacleBox(decor);
+        if(obstacleBox && boxesOverlap(entityBox, obstacleBox)){
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function isRectBlockedByObstacle(rect){
+    for(const decor of worldDecorations){
+        const obstacleBox = getDecorationObstacleBox(decor);
+        if(obstacleBox && boxesOverlap(rect, obstacleBox)){
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function keepEntityInsideWorld(entity){
+    entity.x = clamp(entity.x, 0, getWorldWidth() - entity.w);
+    entity.y = clamp(entity.y, 0, getWorldHeight() - entity.h);
+}
+
+function moveEntityWithObstacleCollision(entity, dx, dy){
+    if(!entity) return;
+
+    const oldX = entity.x;
+    const oldY = entity.y;
+
+    if(dx !== 0){
+        entity.x += dx;
+        keepEntityInsideWorld(entity);
+
+        if(collidesWithWorldObstacle(entity)){
+            entity.x = oldX;
+        }
+    }
+
+    if(dy !== 0){
+        entity.y += dy;
+        keepEntityInsideWorld(entity);
+
+        if(collidesWithWorldObstacle(entity)){
+            entity.y = oldY;
+        }
+    }
+}
+
+function resolveEntityObstacleCollision(entity){
+    if(!entity || !collidesWithWorldObstacle(entity)) return;
+
+    const startX = entity.x;
+    const startY = entity.y;
+
+    for(let radius=12; radius<=240; radius+=12){
+        for(let i=0; i<16; i++){
+            const angle = (Math.PI * 2 / 16) * i;
+            entity.x = clamp(startX + Math.cos(angle) * radius, 0, getWorldWidth() - entity.w);
+            entity.y = clamp(startY + Math.sin(angle) * radius, 0, getWorldHeight() - entity.h);
+
+            if(!collidesWithWorldObstacle(entity)){
+                return;
+            }
+        }
+    }
+
+    entity.x = startX;
+    entity.y = startY;
+}
+
+function findOpenPosition(x,y,w,h){
+    const testEntity = {x:x, y:y, w:w, h:h};
+    keepEntityInsideWorld(testEntity);
+
+    if(!collidesWithWorldObstacle(testEntity)){
+        return {x:testEntity.x, y:testEntity.y};
+    }
+
+    for(let radius=60; radius<=520; radius+=60){
+        for(let i=0; i<20; i++){
+            const angle = (Math.PI * 2 / 20) * i;
+            testEntity.x = clamp(x + Math.cos(angle) * radius, 0, getWorldWidth() - w);
+            testEntity.y = clamp(y + Math.sin(angle) * radius, 0, getWorldHeight() - h);
+
+            if(!collidesWithWorldObstacle(testEntity)){
+                return {x:testEntity.x, y:testEntity.y};
+            }
+        }
+    }
+
+    return {x:clamp(x, 0, getWorldWidth() - w), y:clamp(y, 0, getWorldHeight() - h)};
+}
+
 function rebuildWorldDecorations(){
     const map = getCurrentMap();
     const tier = Math.max(0, getRoundTier());
@@ -237,7 +419,15 @@ function rebuildWorldDecorations(){
 
         const type = options[Math.floor(r3 * options.length) % options.length];
         const size = 0.75 + seededRandom(i * 19 + tier * 41) * 0.65;
-        worldDecorations.push(makeWorldDecoration(i, type, x, y, size));
+        const decor = makeWorldDecoration(i, type, x, y, size);
+        const obstacleBox = getDecorationObstacleBox(decor);
+
+        // Evita que los obstáculos tapen el inicio del jugador, el centro del mapa o el portal de jefe.
+        if(obstacleBox && isDecorationBoxInSafeArea(obstacleBox)){
+            continue;
+        }
+
+        worldDecorations.push(decor);
     }
 }
 
@@ -667,8 +857,9 @@ function triggerEnemySpecialAttack(enemy, dx, dy, distance){
         let pc = getPlayerCenter();
         let offsetX = (Math.random() < 0.5 ? -1 : 1) * 75;
         let offsetY = (Math.random() < 0.5 ? -1 : 1) * 45;
-        enemy.x = Math.max(0, Math.min(canvas.width - enemy.w, pc.x + offsetX - enemy.w / 2));
-        enemy.y = Math.max(0, Math.min(canvas.height - 100 - enemy.h, pc.y + offsetY - enemy.h / 2));
+        const shadowPos = findOpenPosition(pc.x + offsetX - enemy.w / 2, pc.y + offsetY - enemy.h / 2, enemy.w, enemy.h);
+        enemy.x = shadowPos.x;
+        enemy.y = shadowPos.y;
         createEnemyAreaAttack({
             x:pc.x,
             y:pc.y,
@@ -706,7 +897,7 @@ function triggerEnemySpecialAttack(enemy, dx, dy, distance){
             x:pc.x - 16,
             y:0,
             w:32,
-            h:canvas.height - 100,
+            h:getWorldHeight(),
             shape:"rect",
             damage:18 + round * 0.50,
             effect:"light",
@@ -808,6 +999,7 @@ function setCanvasSize(mode){
 function keepPlayerInside(){
     player.x = clamp(player.x, 0, getWorldWidth() - player.w);
     player.y = clamp(player.y, 0, getWorldHeight() - player.h);
+    resolveEntityObstacleCollision(player);
 }
 
 setCanvasSize("normal");
@@ -1599,7 +1791,7 @@ function randomEnemyPosition(){
     x = clamp(x, 35, getWorldWidth() - 90);
     y = clamp(y, 35, getWorldHeight() - 90);
 
-    return {x,y};
+    return findOpenPosition(x, y, 70, 70);
 }
 
 function isBossRound(){
@@ -1630,9 +1822,11 @@ function spawnBoss(){
     currentBossName = bossName;
     bossBattleMessageTimer = 260;
 
+    const bossPos = findOpenPosition(getWorldWidth() / 2 - bossSize / 2, getWorldHeight() / 2 - bossSize / 2, bossSize, bossSize);
+
     enemies.push({
-        x:getWorldWidth() / 2 - bossSize / 2,
-        y:getWorldHeight() / 2 - bossSize / 2,
+        x:bossPos.x,
+        y:bossPos.y,
         w:bossSize,
         h:bossSize,
         hp:bossHp,
@@ -2927,8 +3121,7 @@ function updateCat(){
         dy /= distance;
     }
 
-    cat.x += dx * cat.speed;
-    cat.y += dy * cat.speed;
+    moveEntityWithObstacleCollision(cat, dx * cat.speed, dy * cat.speed);
 
     if(cat.attackCooldown > 0){
         cat.attackCooldown--;
@@ -2971,6 +3164,11 @@ function updateProjectiles(){
         arrow.y += arrow.dy * arrow.speed;
         arrow.life--;
 
+        if(isRectBlockedByObstacle(arrow)){
+            arrow.life = 0;
+            return;
+        }
+
         enemies.forEach(enemy=>{
             if(enemy.hp > 0){
                 if(
@@ -3001,6 +3199,11 @@ function updateProjectiles(){
         spear.x += spear.dx * spear.speed;
         spear.y += spear.dy * spear.speed;
         spear.life--;
+
+        if(isRectBlockedByObstacle(spear)){
+            spear.life = 0;
+            return;
+        }
 
         enemies.forEach(enemy=>{
             if(enemy.hp > 0){
@@ -3036,6 +3239,11 @@ function updateProjectiles(){
         bolt.x += bolt.dx * bolt.speed;
         bolt.y += bolt.dy * bolt.speed;
         bolt.life--;
+
+        if(!bolt.pierce && isRectBlockedByObstacle(bolt)){
+            bolt.life = 0;
+            return;
+        }
 
         enemies.forEach(enemy=>{
             if(enemy.hp > 0){
@@ -3075,6 +3283,11 @@ function updateProjectiles(){
         arrow.x += arrow.dx * arrow.speed;
         arrow.y += arrow.dy * arrow.speed;
         arrow.life--;
+
+        if(isRectBlockedByObstacle(arrow)){
+            arrow.life = 0;
+            return;
+        }
 
         if(
             arrow.x < player.x + player.w &&
@@ -3128,26 +3341,30 @@ function update(){
 
     let moveSpeed = getPlayerMoveSpeed();
 
+    let playerMoveX = 0;
+    let playerMoveY = 0;
+
     if(keys["w"]){
-        player.y -= moveSpeed;
+        playerMoveY -= moveSpeed;
         player.direction = "up";
     }
 
     if(keys["s"]){
-        player.y += moveSpeed;
+        playerMoveY += moveSpeed;
         player.direction = "down";
     }
 
     if(keys["a"]){
-        player.x -= moveSpeed;
+        playerMoveX -= moveSpeed;
         player.direction = "left";
     }
 
     if(keys["d"]){
-        player.x += moveSpeed;
+        playerMoveX += moveSpeed;
         player.direction = "right";
     }
 
+    moveEntityWithObstacleCollision(player, playerMoveX, playerMoveY);
     keepPlayerInside();
 
     if(chargingArrow){
@@ -3256,22 +3473,25 @@ function update(){
 
             triggerEnemySpecialAttack(enemy, dx, dy, distance);
 
+            let enemyMoveX = 0;
+            let enemyMoveY = 0;
+
             if(enemy.type === "melee"){
-                enemy.x += dx * enemy.speed + enemy.randomX;
-                enemy.y += dy * enemy.speed + enemy.randomY;
+                enemyMoveX += dx * enemy.speed + enemy.randomX;
+                enemyMoveY += dy * enemy.speed + enemy.randomY;
             }
 
             if(enemy.type === "archer"){
                 if(distance < 250){
-                    enemy.x -= dx * enemy.speed;
-                    enemy.y -= dy * enemy.speed;
+                    enemyMoveX -= dx * enemy.speed;
+                    enemyMoveY -= dy * enemy.speed;
                 }else if(distance > 350){
-                    enemy.x += dx * enemy.speed;
-                    enemy.y += dy * enemy.speed;
+                    enemyMoveX += dx * enemy.speed;
+                    enemyMoveY += dy * enemy.speed;
                 }
 
-                enemy.x += enemy.randomX * 0.4;
-                enemy.y += enemy.randomY * 0.4;
+                enemyMoveX += enemy.randomX * 0.4;
+                enemyMoveY += enemy.randomY * 0.4;
 
                 enemy.shootCooldown--;
 
@@ -3282,8 +3502,8 @@ function update(){
             }
 
             if(enemy.type === "frost"){
-                enemy.x += dx * enemy.speed + enemy.randomY * 0.9;
-                enemy.y += dy * enemy.speed + enemy.randomX * 0.9;
+                enemyMoveX += dx * enemy.speed + enemy.randomY * 0.9;
+                enemyMoveY += dy * enemy.speed + enemy.randomX * 0.9;
 
                 enemy.shootCooldown--;
 
@@ -3294,13 +3514,13 @@ function update(){
             }
 
             if(enemy.type === "sand"){
-                enemy.x += dx * enemy.speed * 0.85 + enemy.randomX * 0.35;
-                enemy.y += dy * enemy.speed * 0.85 + enemy.randomY * 0.35;
+                enemyMoveX += dx * enemy.speed * 0.85 + enemy.randomX * 0.35;
+                enemyMoveY += dy * enemy.speed * 0.85 + enemy.randomY * 0.35;
             }
 
             if(enemy.type === "poison"){
-                enemy.x += dx * enemy.speed * 0.75 + enemy.randomX * 0.9;
-                enemy.y += dy * enemy.speed * 0.75 + enemy.randomY * 0.9;
+                enemyMoveX += dx * enemy.speed * 0.75 + enemy.randomX * 0.9;
+                enemyMoveY += dy * enemy.speed * 0.75 + enemy.randomY * 0.9;
 
                 enemy.shootCooldown--;
 
@@ -3311,17 +3531,17 @@ function update(){
             }
 
             if(enemy.type === "shadow"){
-                enemy.x += dx * enemy.speed * 1.35 + enemy.randomX * 0.7;
-                enemy.y += dy * enemy.speed * 1.35 + enemy.randomY * 0.7;
+                enemyMoveX += dx * enemy.speed * 1.35 + enemy.randomX * 0.7;
+                enemyMoveY += dy * enemy.speed * 1.35 + enemy.randomY * 0.7;
             }
 
             if(enemy.type === "celestial"){
                 if(distance < 230){
-                    enemy.x -= dx * enemy.speed;
-                    enemy.y -= dy * enemy.speed;
+                    enemyMoveX -= dx * enemy.speed;
+                    enemyMoveY -= dy * enemy.speed;
                 }else{
-                    enemy.x += dx * enemy.speed * 0.55 + enemy.randomX * 0.5;
-                    enemy.y += dy * enemy.speed * 0.55 + enemy.randomY * 0.5;
+                    enemyMoveX += dx * enemy.speed * 0.55 + enemy.randomX * 0.5;
+                    enemyMoveY += dy * enemy.speed * 0.55 + enemy.randomY * 0.5;
                 }
 
                 enemy.shootCooldown--;
@@ -3333,8 +3553,8 @@ function update(){
             }
 
             if(enemy.type === "abyss"){
-                enemy.x += dx * enemy.speed + enemy.randomX * 1.1;
-                enemy.y += dy * enemy.speed + enemy.randomY * 1.1;
+                enemyMoveX += dx * enemy.speed + enemy.randomX * 1.1;
+                enemyMoveY += dy * enemy.speed + enemy.randomY * 1.1;
 
                 enemy.shootCooldown--;
 
@@ -3345,8 +3565,8 @@ function update(){
             }
 
             if(enemy.type === "boss"){
-                enemy.x += dx * enemy.speed + enemy.randomX * 0.45;
-                enemy.y += dy * enemy.speed + enemy.randomY * 0.45;
+                enemyMoveX += dx * enemy.speed + enemy.randomX * 0.45;
+                enemyMoveY += dy * enemy.speed + enemy.randomY * 0.45;
 
                 enemy.shootCooldown--;
 
@@ -3357,9 +3577,15 @@ function update(){
             }
 
             if(enemy.dashTimer && enemy.dashTimer > 0){
-                enemy.x += (enemy.dashDx || 0) * (enemy.dashSpeed || 0);
-                enemy.y += (enemy.dashDy || 0) * (enemy.dashSpeed || 0);
+                enemyMoveX += (enemy.dashDx || 0) * (enemy.dashSpeed || 0);
+                enemyMoveY += (enemy.dashDy || 0) * (enemy.dashSpeed || 0);
                 enemy.dashTimer--;
+            }
+
+            moveEntityWithObstacleCollision(enemy, enemyMoveX, enemyMoveY);
+
+            if(collidesWithWorldObstacle(enemy)){
+                resolveEntityObstacleCollision(enemy);
             }
 
             if(enemy.x < 0) enemy.x = 0;

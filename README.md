@@ -73,3 +73,17 @@ Para publicar el juego, el repositorio debe tener `index.html` en la raíz. Desp
 - No cambies rutas de audio sin actualizar `index.html`.
 - Haz cambios grandes en ramas separadas.
 - Prueba el juego antes de hacer `commit` y `push`.
+
+
+## Obstáculos reales
+
+En esta versión, varias decoraciones del mapa ya funcionan como obstáculos:
+
+- Árboles
+- Piedras y rocas
+- Cactus
+- Cristales
+- Pilares, estatuas y ruinas
+- Cajas y troncos
+
+El jugador, enemigos y mascota no pueden atravesarlos. Los proyectiles normales también se detienen cuando chocan con estos objetos.
