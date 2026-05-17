@@ -1,0 +1,4374 @@
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+const gameMusic = document.getElementById("gameMusic");
+gameMusic.volume = 0.35;
+
+function playGameMusic(){
+    if(!gameMusic) return;
+    gameMusic.loop = true;
+    gameMusic.play().catch(()=>{
+        // El navegador puede bloquear el audio hasta que el jugador haga clic o presione una tecla.
+    });
+}
+
+const menu = document.getElementById("menu");
+const topHoverZone = document.getElementById("topHoverZone");
+const topBar = document.getElementById("topBar");
+const gameWrapper = document.getElementById("gameWrapper");
+const infoOverlay = document.getElementById("infoOverlay");
+
+const hudAvatar = document.getElementById("hudAvatar");
+const hudCharacterName = document.getElementById("hudCharacterName");
+const hudCharacterInfo = document.getElementById("hudCharacterInfo");
+const hudHpText = document.getElementById("hudHpText");
+const hudHpFill = document.getElementById("hudHpFill");
+const hudUpgradeText = document.getElementById("hudUpgradeText");
+const hudMapName = document.getElementById("hudMapName");
+const hudRoundText = document.getElementById("hudRoundText");
+const hudWaveTitle = document.getElementById("hudWaveTitle");
+const hudWaveText = document.getElementById("hudWaveText");
+const hudWaveFill = document.getElementById("hudWaveFill");
+const hudCoinsText = document.getElementById("hudCoinsText");
+const hudMessageText = document.getElementById("hudMessageText");
+let lastHudRoundForAnimation = null;
+
+const playBtn = document.getElementById("playBtn");
+const settingsBtn = document.getElementById("settingsBtn");
+const customizeBtn = document.getElementById("customizeBtn");
+const shopBtn = document.getElementById("shopBtn");
+const premiumShopBtn = document.getElementById("premiumShopBtn");
+const settingsPanel = document.getElementById("settingsPanel");
+const customizePanel = document.getElementById("customizePanel");
+const shopPanel = document.getElementById("shopPanel");
+const premiumShopPanel = document.getElementById("premiumShopPanel");
+const closePremiumShopBtn = document.getElementById("closePremiumShopBtn");
+const closePremiumShopBottomBtn = document.getElementById("closePremiumShopBottomBtn");
+const premiumGoTopBtn = document.getElementById("premiumGoTopBtn");
+
+const backButton = document.getElementById("backButton");
+const infoButton = document.getElementById("infoButton");
+const closeInfo = document.getElementById("closeInfo");
+
+const minButton = document.getElementById("minButton");
+const normalSizeButton = document.getElementById("normalSizeButton");
+const maxButton = document.getElementById("maxButton");
+
+const difficultyText = document.getElementById("difficultyText");
+const characterText = document.getElementById("characterText");
+const unlockText = document.getElementById("unlockText");
+
+const archerCharacter = document.getElementById("archerCharacter");
+const berserkerCharacter = document.getElementById("berserkerCharacter");
+const mageCharacter = document.getElementById("mageCharacter");
+const lancerCharacter = document.getElementById("lancerCharacter");
+const gladiatorCharacter = document.getElementById("gladiatorCharacter");
+const resetUnlocksBtn = document.getElementById("resetUnlocksBtn");
+
+const shopCoinsText = document.getElementById("shopCoinsText");
+const shopGemsText = document.getElementById("shopGemsText");
+const shopMessage = document.getElementById("shopMessage");
+const shopDamageBtn = document.getElementById("shopDamageBtn");
+const shopSpeedBtn = document.getElementById("shopSpeedBtn");
+const shopHpBtn = document.getElementById("shopHpBtn");
+const shopSummonBtn = document.getElementById("shopSummonBtn");
+const buyGems100Btn = document.getElementById("buyGems100Btn");
+const buyGems500Btn = document.getElementById("buyGems500Btn");
+const buyGems1200Btn = document.getElementById("buyGems1200Btn");
+
+const premiumGemsText = document.getElementById("premiumGemsText");
+const premiumShopMessage = document.getElementById("premiumShopMessage");
+const premiumEquipText = document.getElementById("premiumEquipText");
+
+const buyDritaniumSwordBtn = document.getElementById("buyDritaniumSwordBtn");
+const buyOrangeEffectBtn = document.getElementById("buyOrangeEffectBtn");
+const buyLionPetBtn = document.getElementById("buyLionPetBtn");
+const buyHeroSwordBtn = document.getElementById("buyHeroSwordBtn");
+const buyBattlePassBtn = document.getElementById("buyBattlePassBtn");
+const claimBattlePassBtn = document.getElementById("claimBattlePassBtn");
+const buyLegendaryCatoBtn = document.getElementById("buyLegendaryCatoBtn");
+const buyCarBtn = document.getElementById("buyCarBtn");
+const buyMinigunBtn = document.getElementById("buyMinigunBtn");
+const buyHelicopterBtn = document.getElementById("buyHelicopterBtn");
+
+const ownedDritaniumSwordText = document.getElementById("ownedDritaniumSwordText");
+const ownedOrangeEffectText = document.getElementById("ownedOrangeEffectText");
+const ownedLionPetText = document.getElementById("ownedLionPetText");
+const ownedHeroSwordText = document.getElementById("ownedHeroSwordText");
+const ownedBattlePassText = document.getElementById("ownedBattlePassText");
+const ownedLegendaryCatoText = document.getElementById("ownedLegendaryCatoText");
+const ownedCarText = document.getElementById("ownedCarText");
+const ownedMinigunText = document.getElementById("ownedMinigunText");
+const ownedHelicopterText = document.getElementById("ownedHelicopterText");
+
+const equipNormalSwordBtn = document.getElementById("equipNormalSwordBtn");
+const equipDritaniumSwordBtn = document.getElementById("equipDritaniumSwordBtn");
+const equipMinigunBtn = document.getElementById("equipMinigunBtn");
+const equipOrangeEffectBtn = document.getElementById("equipOrangeEffectBtn");
+const equipNoEffectBtn = document.getElementById("equipNoEffectBtn");
+const equipLionPetBtn = document.getElementById("equipLionPetBtn");
+const equipCatPetBtn = document.getElementById("equipCatPetBtn");
+const equipCarBtn = document.getElementById("equipCarBtn");
+const equipNoMountBtn = document.getElementById("equipNoMountBtn");
+const equipHelicopterBtn = document.getElementById("equipHelicopterBtn");
+const equipNoSupportBtn = document.getElementById("equipNoSupportBtn");
+const heroSwordCharacter = document.getElementById("heroSwordCharacter");
+const legendaryCatoCharacter = document.getElementById("legendaryCatoCharacter");
+
+
+const SHOP_DAMAGE_COST = 10;
+const SHOP_SPEED_COST = 10;
+const SHOP_HP_COST = 20;
+const SHOP_SUMMON_COST = 15;
+
+const DRITANIUM_PACK_100 = {gems:100, price:"15 MXN"};
+const DRITANIUM_PACK_500 = {gems:500, price:"69 MXN"};
+const DRITANIUM_PACK_1200 = {gems:1200, price:"129 MXN"};
+
+const PREMIUM_PRICES = {
+    dritaniumSword:50,
+    orangeEffect:20,
+    lionPet:50,
+    heroSword:100,
+    battlePass:200,
+    legendaryCato:500,
+    car:150,
+    minigun:125,
+    helicopter:250
+};
+
+const INFINITE_DAMAGE = 999999999;
+
+
+let gameStarted = false;
+let gamePaused = false;
+let infoOpen = false;
+let gameOverHandled = false;
+let screenMode = "normal";
+let enemyDamage = 0.08;
+
+let keys = {};
+
+// Mundo 2.5D falso estilo aventura: el canvas es la ventana, el mundo es más grande.
+const WORLD_BASE_WIDTH = 2400;
+const WORLD_BASE_HEIGHT = 1500;
+let camera = {x:0, y:0};
+let worldDecorations = [];
+let worldDecorationKey = "";
+
+function getWorldWidth(){
+    return Math.max(WORLD_BASE_WIDTH, canvas.width);
+}
+
+function getWorldHeight(){
+    return Math.max(WORLD_BASE_HEIGHT, canvas.height);
+}
+
+function clamp(value, min, max){
+    return Math.max(min, Math.min(max, value));
+}
+
+function getPlayerCenter(){
+    return {
+        x:player.x + player.w / 2,
+        y:player.y + player.h / 2
+    };
+}
+
+function updateCamera(){
+    const pc = getPlayerCenter();
+    const maxX = Math.max(0, getWorldWidth() - canvas.width);
+    const maxY = Math.max(0, getWorldHeight() - canvas.height);
+    const targetX = clamp(pc.x - canvas.width / 2, 0, maxX);
+    const targetY = clamp(pc.y - canvas.height / 2, 0, maxY);
+
+    camera.x += (targetX - camera.x) * 0.14;
+    camera.y += (targetY - camera.y) * 0.14;
+
+    if(Math.abs(camera.x - targetX) < 0.5) camera.x = targetX;
+    if(Math.abs(camera.y - targetY) < 0.5) camera.y = targetY;
+}
+
+function seededRandom(seed){
+    let value = Math.sin(seed) * 10000;
+    return value - Math.floor(value);
+}
+
+function makeWorldDecoration(seed, type, x, y, size){
+    return {seed, type, x, y, size, depthY:y};
+}
+
+function rebuildWorldDecorations(){
+    const map = getCurrentMap();
+    const tier = Math.max(0, getRoundTier());
+    const key = map.type + "_" + tier;
+    if(key === worldDecorationKey) return;
+
+    worldDecorationKey = key;
+    worldDecorations = [];
+
+    const worldW = getWorldWidth();
+    const worldH = getWorldHeight();
+    const typeByMap = {
+        forest:["tree","bush","rock","stump"],
+        volcano:["lavaRock","ember","rock","crystalRed"],
+        ice:["pineSnow","iceCrystal","rock","snowBush"],
+        desert:["cactus","sandRock","deadTree","desertBush"],
+        swamp:["swampTree","mushroom","reed","rock"],
+        city:["ruin","crate","lamp","stone"],
+        temple:["pillar","crystalPurple","statue","bush"],
+        abyss:["obelisk","crystalRed","voidRock","deadTree"]
+    };
+    const options = typeByMap[map.type] || typeByMap.forest;
+    const count = 90 + Math.min(80, tier * 10);
+
+    for(let i=0;i<count;i++){
+        const r1 = seededRandom(i * 31 + tier * 97 + map.type.length * 13);
+        const r2 = seededRandom(i * 47 + tier * 53 + map.name.length * 17);
+        const r3 = seededRandom(i * 73 + tier * 29 + 9);
+        let x = 70 + r1 * (worldW - 140);
+        let y = 85 + r2 * (worldH - 170);
+
+        // Deja un área limpia cerca del inicio para que no estorben visualmente.
+        if(x < 340 && y < 460){
+            x += 420;
+            y += 260;
+        }
+
+        const type = options[Math.floor(r3 * options.length) % options.length];
+        const size = 0.75 + seededRandom(i * 19 + tier * 41) * 0.65;
+        worldDecorations.push(makeWorldDecoration(i, type, x, y, size));
+    }
+}
+
+function drawShadow(cx, cy, rx, ry, alpha){
+    ctx.fillStyle = "rgba(0,0,0," + alpha + ")";
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+function roundRectPath(x,y,w,h,r){
+    r = Math.min(r, w/2, h/2);
+    ctx.beginPath();
+    ctx.moveTo(x+r, y);
+    ctx.lineTo(x+w-r, y);
+    ctx.quadraticCurveTo(x+w, y, x+w, y+r);
+    ctx.lineTo(x+w, y+h-r);
+    ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+    ctx.lineTo(x+r, y+h);
+    ctx.quadraticCurveTo(x, y+h, x, y+h-r);
+    ctx.lineTo(x, y+r);
+    ctx.quadraticCurveTo(x, y, x+r, y);
+    ctx.closePath();
+}
+
+function fillRoundRect(x,y,w,h,r,color){
+    ctx.fillStyle = color;
+    roundRectPath(x,y,w,h,r);
+    ctx.fill();
+}
+
+function strokeRoundRect(x,y,w,h,r,color,width){
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    roundRectPath(x,y,w,h,r);
+    ctx.stroke();
+}
+
+
+let archerUnlocked = localStorage.getItem("archerUnlocked") === "true";
+let berserkerUnlocked = localStorage.getItem("berserkerUnlocked") === "true";
+let mageUnlocked = localStorage.getItem("mageUnlocked") === "true";
+let lancerUnlocked = localStorage.getItem("lancerUnlocked") === "true";
+let gladiatorUnlocked = localStorage.getItem("gladiatorUnlocked") === "true";
+
+let archerMessageTimer = 0;
+let berserkerMessageTimer = 0;
+let mageMessageTimer = 0;
+let lancerMessageTimer = 0;
+let gladiatorMessageTimer = 0;
+
+const player = {
+    x:100,
+    y:300,
+    w:50,
+    h:50,
+    baseW:50,
+    baseH:50,
+    speed:5,
+    hp:100,
+    maxHp:100,
+    attacking:false,
+    color:"cyan",
+    direction:"right",
+    character:"sword",
+    evolved:false,
+    ascended:false,
+    powerTier:0,
+    blocking:false
+};
+
+let upgrades = {
+    damage:25,
+    speed:5,
+    maxHp:100
+};
+
+let upgradeLevels = {
+    damage:0,
+    speed:0,
+    hp:0
+};
+
+let maxUpgradeLevel = 10;
+
+let coins = 0;
+let dritaniumGems = Number(localStorage.getItem("dritaniumGems") || 0);
+
+let ownedPremium = JSON.parse(localStorage.getItem("ownedPremium") || "{}");
+let equippedPremiumWeapon = localStorage.getItem("equippedPremiumWeapon") || "normal";
+let equippedAttackEffect = localStorage.getItem("equippedAttackEffect") || "none";
+let equippedPremiumPet = localStorage.getItem("equippedPremiumPet") || "cat";
+let equippedMount = localStorage.getItem("equippedMount") || "none";
+let equippedSupport = localStorage.getItem("equippedSupport") || "none";
+let lastBattlePassClaimDate = localStorage.getItem("lastBattlePassClaimDate") || "";
+let premiumRewardMessageTimer = 0;
+let heroRayCooldown = 0;
+let firingMinigun = false;
+let minigunCooldown = 0;
+let helicopter = null;
+let helicopterUsedThisRound = false;
+let helicopterGunEffectTimer = 0;
+
+let round = 1;
+let roundCoinMessageTimer = 0;
+const ROUND_BREAK_SECONDS = 10;
+const ROUND_BREAK_FRAMES = ROUND_BREAK_SECONDS * 60;
+let roundBreakActive = false;
+let roundBreakTimer = 0;
+let catTutorialMessageTimer = 0;
+
+// Sistema de oleadas controladas:
+// La ronda puede tener muchos enemigos en total, pero solo pocos vivos al mismo tiempo.
+let roundEnemyTotal = 0;
+let roundEnemiesSpawned = 0;
+let roundMaxActiveEnemies = 3;
+let waveSpawnCooldown = 0;
+let waveMessageTimer = 0;
+let bossHelperTotal = 0;
+let bossHelpersSpawned = 0;
+let bossMaxHelpersAlive = 3;
+let bossHelperSpawnCooldown = 0;
+
+let enemies = [];
+let arrows = [];
+let enemyArrows = [];
+let lightningBolts = [];
+let thrownSpears = [];
+
+let chargingArrow = false;
+let arrowCharge = 0;
+const maxArrowCharge = 100;
+
+let chargingAxe = false;
+let axeCharge = 0;
+const maxAxeCharge = 100;
+let axeEffect = null;
+
+let chargingMagic = false;
+let magicCharge = 0;
+const maxMagicCharge = 100;
+let magicEffectTimer = 0;
+
+let chargingSpear = false;
+let spearCharge = 0;
+const maxSpearCharge = 100;
+let spearMeleeEffect = null;
+
+let chargingGladiatorSword = false;
+let gladiatorSwordCharge = 0;
+const maxGladiatorSwordCharge = 100;
+let gladiatorSwordEffect = null;
+
+let summonUnlocked = false;
+let summonUsedThisRound = false;
+let summonMessageTimer = 0;
+let evolutionMessageTimer = 0;
+let ascensionMessageTimer = 0;
+let cat = null;
+let summonLevel = 0;
+let maxSummonLevel = 15;
+
+let bossBattleMessageTimer = 0;
+let bossRewardMessageTimer = 0;
+let currentBossName = "";
+let bossPortal = null;
+let bossPortalMessageTimer = 0;
+let frostEnemyMessageTimer = 0;
+let frostEnemyAnnounced = false;
+let frostSlowTimer = 0;
+
+let specialEnemyMessageTimer = 0;
+let currentSpecialEnemyName = "";
+let announcedEnemyTiers = {};
+let enemyAreaAttacks = [];
+let enemySpecialAttackMessageTimer = 0;
+let currentEnemySpecialAttackText = "";
+
+const SPECIAL_ENEMIES = [
+    {tier:1, unlockRound:10, type:"archer", name:"Arquero Oscuro", label:"ARQ", color:"purple", hpBase:40, hpPerRound:7, size:48, speedBase:0.42, speedPerRound:0.028, contactMultiplier:0.45, projectileDamageBase:3, projectileDamagePerRound:0.25, projectileSpeed:4.2, projectileSize:10, shootCooldown:155, behavior:"ranged", effect:"none"},
+    {tier:2, unlockRound:20, type:"frost", name:"Guardián de Hielo", label:"HIELO", color:"#4dd0e1", hpBase:120, hpPerRound:18, size:58, speedBase:1.15, speedPerRound:0.09, contactMultiplier:2.2, projectileDamageBase:7, projectileDamagePerRound:0.45, projectileSpeed:4.8, projectileSize:13, shootCooldown:85, behavior:"frost", effect:"slow"},
+    {tier:3, unlockRound:30, type:"sand", name:"Coloso de Arena", label:"ARENA", color:"#d6a542", hpBase:260, hpPerRound:25, size:70, speedBase:0.85, speedPerRound:0.055, contactMultiplier:3.0, projectileDamageBase:0, projectileDamagePerRound:0, projectileSpeed:0, projectileSize:0, shootCooldown:0, behavior:"tank", effect:"none"},
+    {tier:4, unlockRound:40, type:"poison", name:"Brujo del Pantano", label:"VENENO", color:"#76ff03", hpBase:230, hpPerRound:22, size:60, speedBase:1.05, speedPerRound:0.065, contactMultiplier:2.7, projectileDamageBase:9, projectileDamagePerRound:0.55, projectileSpeed:4.6, projectileSize:14, shootCooldown:78, behavior:"poison", effect:"poison"},
+    {tier:5, unlockRound:50, type:"shadow", name:"Asesino Sombrío", label:"SOMBRA", color:"#7e57c2", hpBase:210, hpPerRound:20, size:52, speedBase:2.0, speedPerRound:0.10, contactMultiplier:3.2, projectileDamageBase:0, projectileDamagePerRound:0, projectileSpeed:0, projectileSize:0, shootCooldown:0, behavior:"fast", effect:"none"},
+    {tier:6, unlockRound:60, type:"celestial", name:"Centinela Celestial", label:"LUZ", color:"#fff176", hpBase:340, hpPerRound:28, size:64, speedBase:1.20, speedPerRound:0.07, contactMultiplier:3.4, projectileDamageBase:13, projectileDamagePerRound:0.65, projectileSpeed:6.2, projectileSize:16, shootCooldown:65, behavior:"celestial", effect:"light"},
+    {tier:7, unlockRound:70, type:"abyss", name:"Demonio del Abismo", label:"ABISMO", color:"#ff00aa", hpBase:500, hpPerRound:38, size:76, speedBase:1.55, speedPerRound:0.085, contactMultiplier:4.2, projectileDamageBase:18, projectileDamagePerRound:0.80, projectileSpeed:6.8, projectileSize:18, shootCooldown:52, behavior:"abyss", effect:"abyss"}
+];
+
+function getEnemySpecialAttackName(type){
+    if(type === "melee") return "Embestida";
+    if(type === "archer") return "Triple flecha oscura";
+    if(type === "frost") return "Prisión de hielo";
+    if(type === "sand") return "Terremoto de arena";
+    if(type === "poison") return "Nube venenosa";
+    if(type === "shadow") return "Teletransporte sombrío";
+    if(type === "celestial") return "Rayo celestial en cruz";
+    if(type === "abyss") return "Vórtice del abismo";
+    if(type === "boss") return "Explosión radial de jefe";
+    return "Ataque especial";
+}
+
+function showEnemySpecialAttackMessage(enemy){
+    let name = enemy.name || "Enemigo";
+    let attackName = getEnemySpecialAttackName(enemy.type);
+    currentEnemySpecialAttackText = name + ": " + attackName;
+    enemySpecialAttackMessageTimer = 90;
+}
+
+function getPlayerCenter(){
+    return {
+        x: player.x + player.w / 2,
+        y: player.y + player.h / 2
+    };
+}
+
+function getEnemyCenter(enemy){
+    return {
+        x: enemy.x + enemy.w / 2,
+        y: enemy.y + enemy.h / 2
+    };
+}
+
+function damagePlayerFromEnemy(amount, effect){
+    if(isPlayerImmortal()) return;
+
+    let finalDamage = amount;
+
+    if(player.character === "gladiator" && player.blocking){
+        finalDamage *= 0.35;
+    }
+
+    player.hp -= finalDamage;
+
+    if(effect === "slow"){
+        frostSlowTimer = Math.max(frostSlowTimer, 90);
+    }
+
+    if(effect === "poison"){
+        player.hp -= finalDamage * 0.35;
+    }
+
+    if(effect === "light"){
+        player.hp -= finalDamage * 0.20;
+    }
+
+    if(effect === "abyss"){
+        player.hp -= finalDamage * 0.50;
+        frostSlowTimer = Math.max(frostSlowTimer, 55);
+    }
+}
+
+function pushEnemyProjectile(enemy, angleOffset, speedBoost, damageBoost, effectOverride, sizeBoost){
+    let center = getEnemyCenter(enemy);
+    let playerCenter = getPlayerCenter();
+    let angle = Math.atan2(playerCenter.y - center.y, playerCenter.x - center.x) + angleOffset;
+    let speed = (enemy.projectileSpeed || 5) + (speedBoost || 0);
+    let size = (enemy.projectileSize || 12) + (sizeBoost || 0);
+
+    enemyArrows.push({
+        x:center.x - size / 2,
+        y:center.y - size / 2,
+        w:size,
+        h:size,
+        dx:Math.cos(angle),
+        dy:Math.sin(angle),
+        speed:speed,
+        damage:(enemy.projectileDamage || (6 + round * 0.5)) + (damageBoost || 0),
+        effect:effectOverride || enemy.projectileEffect || "none",
+        ownerType:enemy.type || "enemy",
+        life:170
+    });
+}
+
+function createEnemyAreaAttack(options){
+    enemyAreaAttacks.push({
+        x:options.x,
+        y:options.y,
+        w:options.w || 0,
+        h:options.h || 0,
+        radius:options.radius || 0,
+        shape:options.shape || "circle",
+        damage:options.damage || 1,
+        effect:options.effect || "none",
+        color:options.color || "rgba(255,255,255,0.35)",
+        stroke:options.stroke || "white",
+        life:options.life || 45,
+        maxLife:options.life || 45,
+        hitOnce:options.hitOnce !== false,
+        hitPlayer:false,
+        tickRate:options.tickRate || 20,
+        tick:0,
+        pull:options.pull || false,
+        label:options.label || ""
+    });
+}
+
+function isPlayerInsideEnemyArea(area){
+    let pc = getPlayerCenter();
+
+    if(area.shape === "rect"){
+        return pc.x >= area.x && pc.x <= area.x + area.w && pc.y >= area.y && pc.y <= area.y + area.h;
+    }
+
+    let dx = pc.x - area.x;
+    let dy = pc.y - area.y;
+    return Math.sqrt(dx * dx + dy * dy) <= area.radius;
+}
+
+function updateEnemyAreaAttacks(){
+    enemyAreaAttacks.forEach(area=>{
+        area.life--;
+
+        if(area.pull && area.life > 0 && !isPlayerImmortal()){
+            let pc = getPlayerCenter();
+            let dx = area.x - pc.x;
+            let dy = area.y - pc.y;
+            player.x += dx * 0.012;
+            player.y += dy * 0.012;
+            keepPlayerInside();
+        }
+
+        if(isPlayerInsideEnemyArea(area)){
+            if(area.hitOnce){
+                if(!area.hitPlayer){
+                    damagePlayerFromEnemy(area.damage, area.effect);
+                    area.hitPlayer = true;
+                }
+            }else{
+                area.tick--;
+                if(area.tick <= 0){
+                    damagePlayerFromEnemy(area.damage, area.effect);
+                    area.tick = area.tickRate;
+                }
+            }
+        }
+    });
+
+    enemyAreaAttacks = enemyAreaAttacks.filter(area=>area.life > 0);
+}
+
+function triggerEnemySpecialAttack(enemy, dx, dy, distance){
+    if(enemy.specialCooldown === undefined){
+        enemy.specialCooldown = Math.floor(Math.random() * 120) + 90;
+    }
+
+    if(enemy.specialCooldown > 0){
+        enemy.specialCooldown--;
+        return;
+    }
+
+    let tierPower = enemy.specialTier || enemy.bossTier || 1;
+
+    if(enemy.type === "melee"){
+        if(distance < 330){
+            enemy.dashTimer = 24;
+            enemy.dashDx = dx;
+            enemy.dashDy = dy;
+            enemy.dashSpeed = 4.5 + round * 0.03;
+            showEnemySpecialAttackMessage(enemy);
+            enemy.specialCooldown = 170;
+        }
+        return;
+    }
+
+    if(enemy.type === "archer"){
+        pushEnemyProjectile(enemy, -0.24, 0.75, 1.2, "none", 0.65);
+        pushEnemyProjectile(enemy, 0, 1.0, 1.6, "none", 0.75);
+        pushEnemyProjectile(enemy, 0.24, 0.75, 1.2, "none", 0.65);
+        showEnemySpecialAttackMessage(enemy);
+        enemy.specialCooldown = 300;
+        return;
+    }
+
+    if(enemy.type === "frost"){
+        let pc = getPlayerCenter();
+        createEnemyAreaAttack({
+            x:pc.x,
+            y:pc.y,
+            radius:75,
+            damage:9 + round * 0.35,
+            effect:"slow",
+            color:"rgba(77,208,225,0.28)",
+            stroke:"#4dd0e1",
+            life:75,
+            hitOnce:false,
+            tickRate:28,
+            label:"HIELO"
+        });
+        showEnemySpecialAttackMessage(enemy);
+        enemy.specialCooldown = 175;
+        return;
+    }
+
+    if(enemy.type === "sand"){
+        let ec = getEnemyCenter(enemy);
+        createEnemyAreaAttack({
+            x:ec.x,
+            y:ec.y,
+            radius:145,
+            damage:14 + round * 0.42,
+            effect:"none",
+            color:"rgba(214,165,66,0.27)",
+            stroke:"#d6a542",
+            life:48,
+            hitOnce:true,
+            label:"TERREMOTO"
+        });
+        showEnemySpecialAttackMessage(enemy);
+        enemy.specialCooldown = 155;
+        return;
+    }
+
+    if(enemy.type === "poison"){
+        let pc = getPlayerCenter();
+        createEnemyAreaAttack({
+            x:pc.x,
+            y:pc.y,
+            radius:90,
+            damage:5 + round * 0.18,
+            effect:"poison",
+            color:"rgba(118,255,3,0.24)",
+            stroke:"#76ff03",
+            life:135,
+            hitOnce:false,
+            tickRate:20,
+            label:"VENENO"
+        });
+        showEnemySpecialAttackMessage(enemy);
+        enemy.specialCooldown = 185;
+        return;
+    }
+
+    if(enemy.type === "shadow"){
+        let pc = getPlayerCenter();
+        let offsetX = (Math.random() < 0.5 ? -1 : 1) * 75;
+        let offsetY = (Math.random() < 0.5 ? -1 : 1) * 45;
+        enemy.x = Math.max(0, Math.min(canvas.width - enemy.w, pc.x + offsetX - enemy.w / 2));
+        enemy.y = Math.max(0, Math.min(canvas.height - 100 - enemy.h, pc.y + offsetY - enemy.h / 2));
+        createEnemyAreaAttack({
+            x:pc.x,
+            y:pc.y,
+            radius:82,
+            damage:16 + round * 0.45,
+            effect:"none",
+            color:"rgba(126,87,194,0.28)",
+            stroke:"#7e57c2",
+            life:34,
+            hitOnce:true,
+            label:"CORTE"
+        });
+        showEnemySpecialAttackMessage(enemy);
+        enemy.specialCooldown = 145;
+        return;
+    }
+
+    if(enemy.type === "celestial"){
+        let pc = getPlayerCenter();
+        createEnemyAreaAttack({
+            x:0,
+            y:pc.y - 16,
+            w:getWorldWidth(),
+            h:32,
+            shape:"rect",
+            damage:18 + round * 0.50,
+            effect:"light",
+            color:"rgba(255,241,118,0.24)",
+            stroke:"#fff176",
+            life:45,
+            hitOnce:true,
+            label:"LUZ"
+        });
+        createEnemyAreaAttack({
+            x:pc.x - 16,
+            y:0,
+            w:32,
+            h:canvas.height - 100,
+            shape:"rect",
+            damage:18 + round * 0.50,
+            effect:"light",
+            color:"rgba(255,241,118,0.24)",
+            stroke:"#fff176",
+            life:45,
+            hitOnce:true,
+            label:"LUZ"
+        });
+        showEnemySpecialAttackMessage(enemy);
+        enemy.specialCooldown = 170;
+        return;
+    }
+
+    if(enemy.type === "abyss"){
+        let pc = getPlayerCenter();
+        createEnemyAreaAttack({
+            x:pc.x,
+            y:pc.y,
+            radius:105,
+            damage:10 + round * 0.32,
+            effect:"abyss",
+            color:"rgba(255,0,170,0.24)",
+            stroke:"#ff00aa",
+            life:120,
+            hitOnce:false,
+            tickRate:24,
+            pull:true,
+            label:"ABISMO"
+        });
+        showEnemySpecialAttackMessage(enemy);
+        enemy.specialCooldown = 180;
+        return;
+    }
+
+    if(enemy.type === "boss"){
+        let shots = Math.min(12, 5 + (enemy.bossTier || 1));
+        for(let i=0;i<shots;i++){
+            let angle = (Math.PI * 2 / shots) * i;
+            let center = getEnemyCenter(enemy);
+            let size = enemy.projectileSize || 18;
+            enemyArrows.push({
+                x:center.x - size / 2,
+                y:center.y - size / 2,
+                w:size,
+                h:size,
+                dx:Math.cos(angle),
+                dy:Math.sin(angle),
+                speed:(enemy.projectileSpeed || 5) + 1.2,
+                damage:(enemy.projectileDamage || 6) + (enemy.bossTier || 1) * 0.8,
+                effect:(enemy.bossTier || 1) >= 3 ? "abyss" : "none",
+                ownerType:"boss",
+                life:185
+            });
+        }
+        showEnemySpecialAttackMessage(enemy);
+        enemy.specialCooldown = Math.max(190, 260 - (enemy.bossTier || 1) * 6);
+    }
+}
+
+
+function saveCharacterUnlocks(){
+    localStorage.setItem("archerUnlocked", archerUnlocked);
+    localStorage.setItem("berserkerUnlocked", berserkerUnlocked);
+    localStorage.setItem("mageUnlocked", mageUnlocked);
+    localStorage.setItem("lancerUnlocked", lancerUnlocked);
+    localStorage.setItem("gladiatorUnlocked", gladiatorUnlocked);
+}
+
+function getHudHeight(){
+    const hudBar = document.getElementById("hudBar");
+    return hudBar ? hudBar.offsetHeight : 82;
+}
+
+function setCanvasSize(mode){
+    screenMode = mode;
+
+    const availableWidth = Math.max(320, window.innerWidth);
+    const availableHeight = Math.max(260, window.innerHeight - getHudHeight());
+
+    if(mode === "min"){
+        canvas.width = Math.min(700, availableWidth);
+        canvas.height = Math.min(420, availableHeight);
+    }
+
+    if(mode === "normal"){
+        canvas.width = Math.min(1000, availableWidth);
+        canvas.height = Math.min(620, availableHeight);
+    }
+
+    if(mode === "max"){
+        canvas.width = availableWidth;
+        canvas.height = availableHeight;
+    }
+
+    keepPlayerInside();
+}
+
+function keepPlayerInside(){
+    player.x = clamp(player.x, 0, getWorldWidth() - player.w);
+    player.y = clamp(player.y, 0, getWorldHeight() - player.h);
+}
+
+setCanvasSize("normal");
+
+window.addEventListener("resize",()=>{
+    setCanvasSize(screenMode);
+});
+
+function updateCharacterUnlocks(){
+    if(round >= 5 && !archerUnlocked){
+        archerUnlocked = true;
+        archerMessageTimer = 220;
+        saveCharacterUnlocks();
+    }
+
+    if(round >= 10 && !berserkerUnlocked){
+        berserkerUnlocked = true;
+        berserkerMessageTimer = 220;
+        saveCharacterUnlocks();
+    }
+
+    if(round >= 15 && !mageUnlocked){
+        mageUnlocked = true;
+        mageMessageTimer = 220;
+        saveCharacterUnlocks();
+    }
+
+    if(round >= 20 && !lancerUnlocked){
+        lancerUnlocked = true;
+        lancerMessageTimer = 220;
+        saveCharacterUnlocks();
+    }
+
+    if(round >= 25 && !gladiatorUnlocked){
+        gladiatorUnlocked = true;
+        gladiatorMessageTimer = 220;
+        saveCharacterUnlocks();
+    }
+
+    updateCharacterButtons();
+}
+
+function updateCharacterButtons(){
+    archerCharacter.disabled = !archerUnlocked;
+    berserkerCharacter.disabled = !berserkerUnlocked;
+    mageCharacter.disabled = !mageUnlocked;
+    lancerCharacter.disabled = !lancerUnlocked;
+    gladiatorCharacter.disabled = !gladiatorUnlocked;
+
+    archerCharacter.innerText = archerUnlocked ? "Arquero" : "Arquero 🔒 R5";
+    berserkerCharacter.innerText = berserkerUnlocked ? "Berserker" : "Berserker 🔒 R10";
+    mageCharacter.innerText = mageUnlocked ? "Mago" : "Mago 🔒 R15";
+    lancerCharacter.innerText = lancerUnlocked ? "Lancero" : "Lancero 🔒 R20";
+    gladiatorCharacter.innerText = gladiatorUnlocked ? "Gladiador" : "Gladiador 🔒 R25";
+
+    unlockText.innerText =
+        "Arquero: " + (archerUnlocked ? "guardado" : "ronda 5") +
+        " | Berserker: " + (berserkerUnlocked ? "guardado" : "ronda 10") +
+        " | Mago: " + (mageUnlocked ? "guardado" : "ronda 15") +
+        " | Lancero: " + (lancerUnlocked ? "guardado" : "ronda 20") +
+        " | Gladiador: " + (gladiatorUnlocked ? "guardado" : "ronda 25");
+}
+
+function unlockUpgradeLimit(){
+    updateCharacterUnlocks();
+
+    let targetTier = Math.floor(round / 10);
+
+    maxUpgradeLevel = 10 + targetTier * 10;
+    maxSummonLevel = 15 + targetTier * 5;
+
+    if(round >= 10 && !summonUnlocked){
+        summonUnlocked = true;
+        summonMessageTimer = 240;
+    }
+}
+
+function applyBossReward(bossTier){
+    while(player.powerTier < bossTier){
+        player.powerTier++;
+
+        upgrades.damage *= 2;
+        upgrades.maxHp *= 2;
+        upgrades.speed *= 2;
+
+        refreshPlayerStats(true);
+
+        let sizeMultiplier = 1 + player.powerTier * 0.30;
+        player.w = Math.round(player.baseW * sizeMultiplier);
+        player.h = Math.round(player.baseH * sizeMultiplier);
+
+        player.evolved = true;
+        player.ascended = player.powerTier >= 2;
+
+        keepPlayerInside();
+    }
+
+    bossRewardMessageTimer = 300;
+}
+
+
+function createBossPortal(enemy){
+    if(bossPortal) return;
+
+    const centerX = enemy.x + enemy.w / 2;
+    const centerY = enemy.y + enemy.h / 2;
+
+    bossPortal = {
+        x:centerX - 45,
+        y:centerY - 55,
+        w:90,
+        h:110,
+        pulse:0,
+        tier:enemy.bossTier || Math.max(1, getRoundTier())
+    };
+
+    bossPortalMessageTimer = 420;
+    hudMessageText && hudMessageText.classList.add("active");
+}
+
+function updateBossPortal(){
+    if(!bossPortal) return;
+
+    bossPortal.pulse += 0.08;
+
+    const playerCenterX = player.x + player.w / 2;
+    const playerCenterY = player.y + player.h / 2;
+    const portalCenterX = bossPortal.x + bossPortal.w / 2;
+    const portalCenterY = bossPortal.y + bossPortal.h / 2;
+    const dx = playerCenterX - portalCenterX;
+    const dy = playerCenterY - portalCenterY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if(distance < 70){
+        bossPortal = null;
+        bossPortalMessageTimer = 0;
+        startNextRound();
+    }
+}
+
+function drawBossPortal(){
+    if(!bossPortal) return;
+
+    const cx = bossPortal.x + bossPortal.w / 2;
+    const cy = bossPortal.y + bossPortal.h / 2;
+    const pulse = Math.sin(bossPortal.pulse) * 8;
+
+    drawShadow(cx, cy + 45, 54, 18, 0.35);
+
+    const gradient = ctx.createRadialGradient(cx, cy, 8, cx, cy, 58 + pulse);
+    gradient.addColorStop(0, "rgba(180,255,255,0.92)");
+    gradient.addColorStop(0.45, "rgba(78,205,255,0.62)");
+    gradient.addColorStop(1, "rgba(111,66,193,0.05)");
+
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, 35 + pulse * 0.5, 52 + pulse, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = "#b8f7ff";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, 39 + pulse * 0.5, 57 + pulse, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(255,255,255,0.8)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, 20 + pulse * 0.35, 34 + pulse * 0.5, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.fillStyle = "white";
+    ctx.font = "bold 16px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText("PORTAL", cx, cy - 70);
+    ctx.textAlign = "left";
+}
+
+function evolvePlayer(){
+    if(player.evolved) return;
+
+    player.evolved = true;
+
+    player.w = 70;
+    player.h = 70;
+
+    upgrades.damage += 30;
+    upgrades.speed += 1.5;
+    upgrades.maxHp += 80;
+
+    player.speed = upgrades.speed;
+    refreshPlayerStats(true);
+
+    evolutionMessageTimer = 240;
+
+    keepPlayerInside();
+}
+
+function ascendPlayer(){
+    if(player.ascended) return;
+
+    player.ascended = true;
+
+    player.w = 95;
+    player.h = 95;
+
+    upgrades.damage *= 2;
+    upgrades.speed *= 2;
+    upgrades.maxHp *= 2;
+
+    player.speed = upgrades.speed;
+    refreshPlayerStats(true);
+
+    ascensionMessageTimer = 300;
+
+    keepPlayerInside();
+}
+
+function resetGame(){
+    gameOverHandled = false;
+
+    player.x = 140;
+    player.y = 360;
+    player.w = player.baseW;
+    player.h = player.baseH;
+    player.speed = 5;
+    player.hp = 100;
+    player.maxHp = 100;
+    player.attacking = false;
+    player.direction = "right";
+    player.evolved = false;
+    player.ascended = false;
+
+    if(player.character === "archer" && !archerUnlocked) player.character = "sword";
+    if(player.character === "berserker" && !berserkerUnlocked) player.character = "sword";
+    if(player.character === "mage" && !mageUnlocked) player.character = "sword";
+    if(player.character === "lancer" && !lancerUnlocked) player.character = "sword";
+    if(player.character === "gladiator" && !gladiatorUnlocked) player.character = "sword";
+    if(player.character === "swordHero" && !ownsPremium("heroSword")) player.character = "sword";
+    if(player.character === "legendaryCato" && !ownsPremium("legendaryCato")) player.character = "sword";
+    player.blocking = false;
+
+    updateCharacterText();
+
+    upgrades.damage = 25;
+    upgrades.speed = 5;
+    upgrades.maxHp = 100;
+
+    upgradeLevels.damage = 0;
+    upgradeLevels.speed = 0;
+    upgradeLevels.hp = 0;
+
+    coins = 0;
+    round = 1;
+    roundBreakActive = false;
+    roundBreakTimer = 0;
+    catTutorialMessageTimer = 0;
+    roundEnemyTotal = 0;
+    roundEnemiesSpawned = 0;
+    roundMaxActiveEnemies = 3;
+    waveSpawnCooldown = 0;
+    waveMessageTimer = 0;
+    bossHelperTotal = 0;
+    bossHelpersSpawned = 0;
+    bossMaxHelpersAlive = 3;
+    bossHelperSpawnCooldown = 0;
+    maxUpgradeLevel = 10;
+
+    archerUnlocked = localStorage.getItem("archerUnlocked") === "true";
+    berserkerUnlocked = localStorage.getItem("berserkerUnlocked") === "true";
+    mageUnlocked = localStorage.getItem("mageUnlocked") === "true";
+    lancerUnlocked = localStorage.getItem("lancerUnlocked") === "true";
+    gladiatorUnlocked = localStorage.getItem("gladiatorUnlocked") === "true";
+
+    archerMessageTimer = 0;
+    berserkerMessageTimer = 0;
+    mageMessageTimer = 0;
+    lancerMessageTimer = 0;
+    gladiatorMessageTimer = 0;
+
+    arrows = [];
+    enemyArrows = [];
+    lightningBolts = [];
+    thrownSpears = [];
+    enemyAreaAttacks = [];
+    enemies = [];
+    bossPortal = null;
+
+    stopCharges();
+    axeEffect = null;
+    spearMeleeEffect = null;
+    magicEffectTimer = 0;
+    firingMinigun = false;
+    minigunCooldown = 0;
+    heroRayCooldown = 0;
+    helicopter = null;
+    helicopterUsedThisRound = false;
+    helicopterGunEffectTimer = 0;
+
+    summonUnlocked = false;
+    summonUsedThisRound = false;
+    summonMessageTimer = 0;
+    evolutionMessageTimer = 0;
+    bossBattleMessageTimer = 0;
+    bossRewardMessageTimer = 0;
+    currentBossName = "";
+    bossPortal = null;
+    bossPortalMessageTimer = 0;
+    frostEnemyMessageTimer = 0;
+    frostEnemyAnnounced = false;
+    frostSlowTimer = 0;
+    specialEnemyMessageTimer = 0;
+    currentSpecialEnemyName = "";
+    announcedEnemyTiers = {};
+    enemyAreaAttacks = [];
+    enemySpecialAttackMessageTimer = 0;
+    currentEnemySpecialAttackText = "";
+    cat = null;
+    summonLevel = 0;
+
+    updateCharacterButtons();
+    refreshPlayerStats(true);
+    updateShopText();
+    updatePremiumShopText();
+    updatePremiumCustomizeButtons();
+    spawnEnemies();
+}
+
+function updateCharacterText(){
+    if(player.character === "sword") characterText.innerText = "Personaje actual: Espadachín";
+    if(player.character === "lancer") characterText.innerText = "Personaje actual: Lancero";
+    if(player.character === "gladiator") characterText.innerText = "Personaje actual: Gladiador";
+    if(player.character === "archer") characterText.innerText = "Personaje actual: Arquero";
+    if(player.character === "berserker") characterText.innerText = "Personaje actual: Berserker";
+    if(player.character === "mage") characterText.innerText = "Personaje actual: Mago";
+    if(player.character === "swordHero") characterText.innerText = "Personaje actual: Héroe de la Espada";
+    if(player.character === "legendaryCato") characterText.innerText = "Personaje actual: Cato el Gato Legendario";
+}
+
+
+
+function savePremiumState(){
+    localStorage.setItem("ownedPremium", JSON.stringify(ownedPremium));
+    localStorage.setItem("equippedPremiumWeapon", equippedPremiumWeapon);
+    localStorage.setItem("equippedAttackEffect", equippedAttackEffect);
+    localStorage.setItem("equippedPremiumPet", equippedPremiumPet);
+    localStorage.setItem("equippedMount", equippedMount);
+    localStorage.setItem("equippedSupport", equippedSupport);
+}
+
+function ownsPremium(item){
+    return ownedPremium[item] === true;
+}
+
+function buyPremiumItem(item, displayName){
+    ownedPremium[item] = true;
+    savePremiumState();
+    updatePremiumShopText(displayName + " comprado gratis por ahora. Precio final: " + PREMIUM_PRICES[item] + " gemas.");
+    updatePremiumCustomizeButtons();
+}
+
+function updateOwnedText(element, item){
+    element.innerText = ownsPremium(item) ? "Comprado ✅" : "No comprado todavía";
+}
+
+function updatePremiumShopText(message){
+    if(!premiumGemsText) return;
+
+    premiumGemsText.innerText = "Gemas de Dritanio: " + dritaniumGems;
+
+    updateOwnedText(ownedDritaniumSwordText, "dritaniumSword");
+    updateOwnedText(ownedOrangeEffectText, "orangeEffect");
+    updateOwnedText(ownedLionPetText, "lionPet");
+    updateOwnedText(ownedHeroSwordText, "heroSword");
+    updateOwnedText(ownedBattlePassText, "battlePass");
+    updateOwnedText(ownedLegendaryCatoText, "legendaryCato");
+    updateOwnedText(ownedCarText, "car");
+    updateOwnedText(ownedMinigunText, "minigun");
+    updateOwnedText(ownedHelicopterText, "helicopter");
+
+    buyDritaniumSwordBtn.disabled = ownsPremium("dritaniumSword");
+    buyOrangeEffectBtn.disabled = ownsPremium("orangeEffect");
+    buyLionPetBtn.disabled = ownsPremium("lionPet");
+    buyHeroSwordBtn.disabled = ownsPremium("heroSword");
+    buyBattlePassBtn.disabled = ownsPremium("battlePass");
+    buyLegendaryCatoBtn.disabled = ownsPremium("legendaryCato");
+    buyCarBtn.disabled = ownsPremium("car");
+    buyMinigunBtn.disabled = ownsPremium("minigun");
+    buyHelicopterBtn.disabled = ownsPremium("helicopter");
+    claimBattlePassBtn.disabled = !ownsPremium("battlePass") || alreadyClaimedBattlePassToday();
+
+    premiumShopMessage.innerText = message || "Por ahora todo se compra gratis. Luego se conectará al sistema real de gemas.";
+}
+
+function updatePremiumCustomizeButtons(){
+    if(!premiumEquipText) return;
+
+    equipDritaniumSwordBtn.disabled = !ownsPremium("dritaniumSword");
+    equipMinigunBtn.disabled = !ownsPremium("minigun");
+    equipOrangeEffectBtn.disabled = !ownsPremium("orangeEffect");
+    equipLionPetBtn.disabled = !ownsPremium("lionPet");
+    equipCarBtn.disabled = !ownsPremium("car");
+    equipHelicopterBtn.disabled = !ownsPremium("helicopter");
+    heroSwordCharacter.disabled = !ownsPremium("heroSword");
+    legendaryCatoCharacter.disabled = !ownsPremium("legendaryCato");
+
+    let weaponName = "Espada normal";
+    if(equippedPremiumWeapon === "dritaniumSword") weaponName = "Espada de Dritanio";
+    if(equippedPremiumWeapon === "minigun") weaponName = "Metralleta";
+
+    let effectName = equippedAttackEffect === "orange" ? "Efecto naranja x1.5" : "Sin efecto";
+    let petName = equippedPremiumPet === "lion" ? "Despertar del león" : "Gato normal";
+    let mountName = equippedMount === "car" ? "Coche de Dritanio" : "Sin coche";
+    let supportName = equippedSupport === "helicopter" ? "Helicóptero" : "Sin apoyo";
+
+    premiumEquipText.innerText = "Arma: " + weaponName + " | Efecto: " + effectName + " | Mascota: " + petName + " | Vehículo: " + mountName + " | Apoyo: " + supportName;
+}
+
+function equipPremium(type, value){
+    if(type === "weapon") equippedPremiumWeapon = value;
+    if(type === "effect") equippedAttackEffect = value;
+    if(type === "pet") equippedPremiumPet = value;
+    if(type === "mount") equippedMount = value;
+    if(type === "support") equippedSupport = value;
+
+    savePremiumState();
+    refreshPlayerStats(true);
+    updatePremiumCustomizeButtons();
+}
+
+function alreadyClaimedBattlePassToday(){
+    let today = new Date().toISOString().slice(0,10);
+    return lastBattlePassClaimDate === today;
+}
+
+function claimBattlePassReward(){
+    if(!ownsPremium("battlePass")) return;
+    if(alreadyClaimedBattlePassToday()){
+        updatePremiumShopText("Ya reclamaste las 25 gemas de hoy.");
+        return;
+    }
+
+    dritaniumGems += 25;
+    lastBattlePassClaimDate = new Date().toISOString().slice(0,10);
+    localStorage.setItem("lastBattlePassClaimDate", lastBattlePassClaimDate);
+    saveDritaniumGems();
+    premiumRewardMessageTimer = 180;
+    updateShopText("Pase de batalla: +25 gemas diarias.");
+    updatePremiumShopText("Reclamaste 25 Gemas de Dritanio del pase de batalla.");
+}
+
+function isPlayerImmortal(){
+    return player.character === "legendaryCato";
+}
+
+function getEffectiveMaxHp(){
+    let maxHp = upgrades.maxHp;
+
+    if(player.character === "gladiator") maxHp *= 2;
+    if(player.character === "swordHero") maxHp *= 5;
+    if(player.character === "legendaryCato") maxHp = INFINITE_DAMAGE;
+    if(equippedMount === "car") maxHp = Math.max(maxHp, 2500);
+
+    return maxHp;
+}
+
+function refreshPlayerStats(fullHeal){
+    player.speed = upgrades.speed;
+    player.maxHp = getEffectiveMaxHp();
+
+    if(fullHeal || player.hp > player.maxHp || isPlayerImmortal()){
+        player.hp = player.maxHp;
+    }
+}
+
+function getPlayerMoveSpeed(){
+    let moveSpeed = upgrades.speed;
+
+    if(player.character === "berserker") moveSpeed *= 0.72;
+    if(player.character === "mage") moveSpeed *= 0.9;
+    if(player.character === "swordHero") moveSpeed *= 2.2;
+    if(player.character === "legendaryCato") moveSpeed *= 2.8;
+    if(equippedMount === "car") moveSpeed *= 2.6;
+    if(frostSlowTimer > 0 && !isPlayerImmortal()) moveSpeed *= 0.55;
+
+    return moveSpeed;
+}
+
+function premiumDamage(baseDamage){
+    let damage = baseDamage;
+
+    if(player.character === "swordHero") damage *= 4;
+    if(player.character === "legendaryCato") damage = INFINITE_DAMAGE;
+    if(equippedPremiumWeapon === "dritaniumSword") damage *= 2;
+    if(equippedAttackEffect === "orange") damage *= 1.5;
+
+    return damage;
+}
+
+function giveEnemyCoin(enemy){
+    if(!enemy || enemy.coinRewarded) return;
+
+    enemy.coinRewarded = true;
+    coins += 5;
+
+    if(enemy.isBoss){
+        applyBossReward(enemy.bossTier || Math.floor(round / 10));
+        createBossPortal(enemy);
+    }
+
+    updateShopText();
+}
+
+function damageEnemy(enemy, damage, options){
+    if(!enemy || enemy.hp <= 0) return;
+
+    let usePremium = !options || options.premium !== false;
+    let finalDamage = usePremium ? premiumDamage(damage) : damage;
+
+    enemy.hp -= finalDamage;
+
+    if(usePremium && equippedPremiumWeapon === "dritaniumSword"){
+        enemy.poisonTimer = Math.max(enemy.poisonTimer || 0, 360);
+        enemy.poisonDamage = Math.max(enemy.poisonDamage || 0, Math.max(0.4, finalDamage * 0.01));
+    }
+
+    if(enemy.hp <= 0){
+        giveEnemyCoin(enemy);
+    }
+}
+
+function dritaniumAreaDamage(centerX, centerY){
+    if(equippedPremiumWeapon !== "dritaniumSword") return;
+
+    let areaSize = 130;
+    let area = {
+        x:centerX - areaSize / 2,
+        y:centerY - areaSize / 2,
+        w:areaSize,
+        h:areaSize
+    };
+
+    enemies.forEach(enemy=>{
+        if(enemy.hp > 0 && area.x < enemy.x + enemy.w && area.x + area.w > enemy.x && area.y < enemy.y + enemy.h && area.y + area.h > enemy.y){
+            damageEnemy(enemy, upgrades.damage * 0.65, {premium:true});
+        }
+    });
+
+    gladiatorSwordEffect = {
+        x:area.x,
+        y:area.y,
+        w:area.w,
+        h:area.h,
+        life:14,
+        charged:true
+    };
+}
+
+function legendaryCatoMapAttack(){
+    enemies.forEach(enemy=>{
+        if(enemy.hp > 0){
+            damageEnemy(enemy, INFINITE_DAMAGE, {premium:false});
+        }
+    });
+
+    axeEffect = {
+        x:0,
+        y:0,
+        w:getWorldWidth(),
+        h:getWorldHeight(),
+        life:18
+    };
+}
+
+function shootHeroRay(){
+    if(heroRayCooldown > 0) return;
+
+    let dx = 0;
+    let dy = 0;
+    if(player.direction === "right") dx = 1;
+    if(player.direction === "left") dx = -1;
+    if(player.direction === "up") dy = -1;
+    if(player.direction === "down") dy = 1;
+
+    let w = dx !== 0 ? 220 : 26;
+    let h = dy !== 0 ? 220 : 26;
+
+    lightningBolts.push({
+        x:player.x + player.w/2 - w/2,
+        y:player.y + player.h/2 - h/2,
+        w:w,
+        h:h,
+        dx:dx,
+        dy:dy,
+        speed:18,
+        damage:premiumDamage(upgrades.damage * 5),
+        life:75,
+        pierce:true,
+        hitEnemies:[],
+        hero:true
+    });
+
+    heroRayCooldown = 35;
+    magicEffectTimer = 12;
+}
+
+function shootMinigunBullet(){
+    let dx = 0;
+    let dy = 0;
+    if(player.direction === "right") dx = 1;
+    if(player.direction === "left") dx = -1;
+    if(player.direction === "up") dy = -1;
+    if(player.direction === "down") dy = 1;
+
+    arrows.push({
+        x:player.x + player.w/2 - 5,
+        y:player.y + player.h/2 - 5,
+        w:10,
+        h:10,
+        dx:dx,
+        dy:dy,
+        speed:18,
+        damage:premiumDamage(upgrades.damage * 0.65),
+        life:70,
+        minigun:true
+    });
+}
+
+function summonHelicopter(){
+    if(equippedSupport !== "helicopter") return;
+    if(helicopterUsedThisRound) return;
+
+    helicopterUsedThisRound = true;
+    helicopter = {
+        x:player.x + player.w / 2 - 70,
+        y:Math.max(35, player.y - 190),
+        w:140,
+        h:55,
+        life:900,
+        attackCooldown:0
+    };
+}
+
+function updateHelicopter(){
+    if(!helicopter) return;
+
+    helicopter.x += Math.sin(Date.now() / 300) * 0.6;
+    helicopter.attackCooldown--;
+
+    if(helicopter.attackCooldown <= 0){
+        let aliveEnemies = enemies.filter(enemy=>enemy.hp > 0);
+        aliveEnemies.slice(0,4).forEach(enemy=>{
+            damageEnemy(enemy, upgrades.damage * 1.4, {premium:false});
+        });
+        helicopter.attackCooldown = 18;
+        helicopterGunEffectTimer = 8;
+    }
+}
+
+function updatePoison(){
+    enemies.forEach(enemy=>{
+        if(enemy.hp > 0 && enemy.poisonTimer > 0){
+            enemy.poisonTimer--;
+            if(enemy.poisonTimer % 25 === 0){
+                damageEnemy(enemy, enemy.poisonDamage || 0.5, {premium:false});
+            }
+        }
+    });
+}
+
+function updateCarCollisions(){
+    if(equippedMount !== "car") return;
+
+    enemies.forEach(enemy=>{
+        if(enemy.hp > 0){
+            if(enemy.carHitCooldown > 0) enemy.carHitCooldown--;
+
+            if(player.x < enemy.x + enemy.w && player.x + player.w > enemy.x && player.y < enemy.y + enemy.h && player.y + player.h > enemy.y){
+                if(!enemy.carHitCooldown || enemy.carHitCooldown <= 0){
+                    damageEnemy(enemy, upgrades.damage * 3 + 80, {premium:false});
+                    enemy.carHitCooldown = 25;
+                }
+            }
+        }
+    });
+}
+
+function updateShopText(message){
+    shopCoinsText.innerText = "Monedas actuales: " + coins;
+    shopGemsText.innerText = "Gemas de Dritanio: " + dritaniumGems;
+    if(premiumGemsText) premiumGemsText.innerText = "Gemas de Dritanio: " + dritaniumGems;
+
+    shopDamageBtn.innerText = "+ Fuerza (" + upgradeLevels.damage + "/" + maxUpgradeLevel + ") - " + SHOP_DAMAGE_COST;
+    shopSpeedBtn.innerText = "+ Velocidad (" + upgradeLevels.speed + "/" + maxUpgradeLevel + ") - " + SHOP_SPEED_COST;
+    shopHpBtn.innerText = "+ Vida (" + upgradeLevels.hp + "/" + maxUpgradeLevel + ") - " + SHOP_HP_COST;
+    shopSummonBtn.innerText = "+ Gato (" + summonLevel + "/" + maxSummonLevel + ") - " + SHOP_SUMMON_COST;
+
+    shopDamageBtn.disabled = coins < SHOP_DAMAGE_COST || upgradeLevels.damage >= maxUpgradeLevel;
+    shopSpeedBtn.disabled = coins < SHOP_SPEED_COST || upgradeLevels.speed >= maxUpgradeLevel;
+    shopHpBtn.disabled = coins < SHOP_HP_COST || upgradeLevels.hp >= maxUpgradeLevel;
+    shopSummonBtn.disabled = !summonUnlocked || coins < SHOP_SUMMON_COST || summonLevel >= maxSummonLevel;
+
+    if(!summonUnlocked){
+        shopSummonBtn.innerText = "+ Gato 🔒 R10";
+    }
+
+    if(message){
+        shopMessage.innerText = message;
+    }else{
+        shopMessage.innerText = "Ganas +5 monedas por enemigo y +5 monedas al completar cada ronda. Las gemas solo serán por pago real.";
+    }
+}
+
+function buyShopDamage(){
+    if(coins < SHOP_DAMAGE_COST || upgradeLevels.damage >= maxUpgradeLevel) return;
+
+    coins -= SHOP_DAMAGE_COST;
+    upgrades.damage += 10;
+    upgradeLevels.damage++;
+
+    updateShopText("Compraste +10 de fuerza.");
+}
+
+function buyShopSpeed(){
+    if(coins < SHOP_SPEED_COST || upgradeLevels.speed >= maxUpgradeLevel) return;
+
+    coins -= SHOP_SPEED_COST;
+    upgrades.speed += 1;
+    player.speed = upgrades.speed;
+    refreshPlayerStats(false);
+    upgradeLevels.speed++;
+
+    updateShopText("Compraste +1 de velocidad.");
+}
+
+function buyShopHp(){
+    if(coins < SHOP_HP_COST || upgradeLevels.hp >= maxUpgradeLevel) return;
+
+    coins -= SHOP_HP_COST;
+    upgrades.maxHp += 10;
+    player.maxHp = upgrades.maxHp;
+    player.hp += 20;
+
+    refreshPlayerStats(false);
+
+    if(player.hp > player.maxHp){
+        player.hp = player.maxHp;
+    }
+
+    upgradeLevels.hp++;
+
+    updateShopText("Compraste más vida máxima.");
+}
+
+function buyShopSummon(){
+    if(!summonUnlocked || coins < SHOP_SUMMON_COST || summonLevel >= maxSummonLevel) return;
+
+    coins -= SHOP_SUMMON_COST;
+    summonLevel++;
+
+    updateShopText("Mejoraste al gato invocado.");
+}
+
+function saveDritaniumGems(){
+    localStorage.setItem("dritaniumGems", dritaniumGems);
+}
+
+function startDritaniumPurchase(pack){
+    updateShopText("Compra real: " + pack.gems + " gemas por " + pack.price + ". Falta conectar pasarela de pago.");
+    alert("Paquete seleccionado: " + pack.gems + " Gemas de Dritanio por " + pack.price + ".\n\nEste botón todavía no cobra dinero ni agrega gemas. Para dinero real se debe conectar Mercado Pago, Stripe, Google Play Billing o App Store In-App Purchases con un servidor seguro.");
+}
+
+function grantDritaniumGemsAfterRealPayment(gems){
+    // Esta función queda lista para usarla después de confirmar un pago real desde un servidor seguro.
+    // No debe llamarse directamente desde botones normales, porque el jugador podría modificarlo desde la consola.
+    dritaniumGems += gems;
+    saveDritaniumGems();
+    updateShopText("Se agregaron " + gems + " Gemas de Dritanio.");
+}
+
+function randomEnemyPosition(){
+    // En mundo grande, los enemigos aparecen alrededor del jugador, no todos de golpe encima.
+    const pc = getPlayerCenter();
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 420 + Math.random() * 340;
+    let x = pc.x + Math.cos(angle) * distance;
+    let y = pc.y + Math.sin(angle) * distance;
+
+    x = clamp(x, 35, getWorldWidth() - 90);
+    y = clamp(y, 35, getWorldHeight() - 90);
+
+    return {x,y};
+}
+
+function isBossRound(){
+    return round > 0 && round % 10 === 0;
+}
+
+function getBossName(tier){
+    const names = [
+        "Guardián de Lava",
+        "Rey Helado",
+        "Titán del Desierto",
+        "Bestia del Pantano",
+        "Señor de la Ciudad Sombría",
+        "Centinela Celestial",
+        "Devorador del Abismo"
+    ];
+
+    if(tier <= names.length) return names[tier - 1];
+    return "Jefe Supremo nivel " + tier;
+}
+
+function spawnBoss(){
+    let tier = Math.floor(round / 10);
+    let bossName = getBossName(tier);
+    let bossSize = 82 + tier * 6;
+    let bossHp = 420 + tier * 360 + tier * tier * 120;
+
+    currentBossName = bossName;
+    bossBattleMessageTimer = 260;
+
+    enemies.push({
+        x:getWorldWidth() / 2 - bossSize / 2,
+        y:getWorldHeight() / 2 - bossSize / 2,
+        w:bossSize,
+        h:bossSize,
+        hp:bossHp,
+        maxHp:bossHp,
+        speed:0.52 + tier * 0.08,
+        type:"boss",
+        isBoss:true,
+        bossTier:tier,
+        name:bossName,
+        shootCooldown:120,
+        projectileDamage:5 + tier * 2.5,
+        projectileSpeed:3.6 + tier * 0.18,
+        projectileSize:12 + tier * 1.2,
+        contactDamage:enemyDamage * (1.4 + tier * 0.30),
+        randomX:(Math.random() - 0.5) * 2,
+        randomY:(Math.random() - 0.5) * 2,
+        changeTimer:Math.floor(Math.random() * 80) + 40,
+        poisonTimer:0,
+        poisonDamage:0,
+        carHitCooldown:0,
+        specialCooldown:Math.floor(Math.random() * 100) + 80,
+        dashTimer:0,
+        dashDx:0,
+        dashDy:0,
+        dashSpeed:0
+    });
+}
+
+function getSpecialEnemyByTier(tier){
+    if(tier <= 0) return null;
+
+    let enemy = SPECIAL_ENEMIES.find(item=>item.tier === tier);
+
+    if(enemy) return enemy;
+
+    return SPECIAL_ENEMIES[SPECIAL_ENEMIES.length - 1];
+}
+
+function getSpecialEnemyByType(type){
+    return SPECIAL_ENEMIES.find(item=>item.type === type) || null;
+}
+
+function announceSpecialEnemyForTier(tier){
+    let enemy = getSpecialEnemyByTier(tier);
+    if(!enemy) return;
+
+    if(!announcedEnemyTiers[enemy.tier]){
+        announcedEnemyTiers[enemy.tier] = true;
+        currentSpecialEnemyName = enemy.name;
+        specialEnemyMessageTimer = 260;
+
+        if(enemy.type === "frost"){
+            frostEnemyAnnounced = true;
+        }
+    }
+}
+
+function getUnlockedSpecialEnemies(){
+    return SPECIAL_ENEMIES.filter(enemy=>round >= enemy.unlockRound);
+}
+
+function chooseSpecialEnemyType(){
+    let unlocked = getUnlockedSpecialEnemies();
+
+    if(unlocked.length === 0) return "melee";
+
+    let currentTier = Math.floor(round / 10);
+    let currentEnemy = getSpecialEnemyByTier(currentTier);
+
+    if(currentEnemy && Math.random() < 0.45){
+        announceSpecialEnemyForTier(currentEnemy.tier);
+        return currentEnemy.type;
+    }
+
+    let selected = unlocked[Math.floor(Math.random() * unlocked.length)];
+    announceSpecialEnemyForTier(selected.tier);
+    return selected.type;
+}
+
+function spawnSpecialEnemy(type){
+    let definition = getSpecialEnemyByType(type);
+    if(!definition) return false;
+
+    announceSpecialEnemyForTier(definition.tier);
+
+    let pos = randomEnemyPosition();
+    let enemyHp = definition.hpBase + round * definition.hpPerRound;
+    let enemySize = definition.size;
+    let enemySpeed = definition.speedBase + round * definition.speedPerRound;
+
+    enemies.push({
+        x:pos.x,
+        y:pos.y,
+        w:enemySize,
+        h:enemySize,
+        hp:enemyHp,
+        maxHp:enemyHp,
+        speed:enemySpeed,
+        type:definition.type,
+        name:definition.name,
+        specialTier:definition.tier,
+        behavior:definition.behavior,
+        label:definition.label,
+        color:definition.color,
+        shootCooldown:Math.floor(Math.random() * 60) + definition.shootCooldown,
+        projectileDamage:definition.projectileDamageBase + round * definition.projectileDamagePerRound,
+        projectileSpeed:definition.projectileSpeed,
+        projectileSize:definition.projectileSize,
+        projectileEffect:definition.effect,
+        contactDamage:enemyDamage * definition.contactMultiplier,
+        canContact:true,
+        randomX:(Math.random() - 0.5) * 2.4,
+        randomY:(Math.random() - 0.5) * 2.4,
+        changeTimer:Math.floor(Math.random() * 70) + 35,
+        poisonTimer:0,
+        poisonDamage:0,
+        carHitCooldown:0,
+        specialCooldown: type === "archer" ? 300 : Math.floor(Math.random() * 120) + 80,
+        dashTimer:0,
+        dashDx:0,
+        dashDy:0,
+        dashSpeed:0
+    });
+
+    return true;
+}
+
+function spawnFrostGuardian(){
+    return spawnSpecialEnemy("frost");
+}
+
+
+function createNormalEnemy(){
+    let pos = randomEnemyPosition();
+
+    let enemyHp = 40 + round * 10;
+    let enemySize = 50;
+    let enemySpeed = 1 + round * 0.2;
+
+    enemies.push({
+        x:pos.x,
+        y:pos.y,
+        w:enemySize,
+        h:enemySize,
+        hp:enemyHp,
+        maxHp:enemyHp,
+        speed:enemySpeed,
+        type:"melee",
+        name:"Enemigo normal",
+        shootCooldown:Math.floor(Math.random() * 100) + 100,
+        projectileDamage:6 + round * 0.5,
+        projectileSpeed:5,
+        projectileSize:12,
+        projectileEffect:"none",
+        contactDamage:enemyDamage,
+        canContact:true,
+        randomX:(Math.random() - 0.5) * 2,
+        randomY:(Math.random() - 0.5) * 2,
+        changeTimer:Math.floor(Math.random() * 80) + 40,
+        poisonTimer:0,
+        poisonDamage:0,
+        carHitCooldown:0,
+        specialCooldown:Math.floor(Math.random() * 120) + 90,
+        dashTimer:0,
+        dashDx:0,
+        dashDy:0,
+        dashSpeed:0
+    });
+
+    return true;
+}
+
+function getRoundTier(){
+    return Math.floor(round / 10);
+}
+
+function getRoundEnemyTotal(){
+    // La ronda sí crece con el tiempo, pero no aparecen todos de golpe.
+    return Math.min(70, 4 + round + Math.floor(round / 3));
+}
+
+function getRoundMaxActiveEnemies(){
+    // Máximo de enemigos vivos al mismo tiempo.
+    // Rondas 1-9: 3 | 10-19: 4 | 20-29: 5 | 30-39: 6...
+    return Math.min(9, 3 + Math.floor((round - 1) / 10));
+}
+
+function getWaveSpawnSize(){
+    return Math.min(roundMaxActiveEnemies, 2 + Math.floor(round / 20));
+}
+
+function countAliveEnemies(){
+    return enemies.filter(enemy=>enemy.hp > 0).length;
+}
+
+function countAliveNonBossEnemies(){
+    return enemies.filter(enemy=>enemy.hp > 0 && !enemy.isBoss).length;
+}
+
+function countAliveBosses(){
+    return enemies.filter(enemy=>enemy.hp > 0 && enemy.isBoss).length;
+}
+
+function spawnEnemyForCurrentRound(){
+    let currentTier = getRoundTier();
+    let specialChance = Math.min(0.18 + currentTier * 0.06, 0.72);
+
+    if(round >= 10 && Math.random() < specialChance){
+        return spawnSpecialEnemy(chooseSpecialEnemyType());
+    }
+
+    return createNormalEnemy();
+}
+
+function spawnWaveEnemies(forceFill){
+    if(isBossRound()) return;
+
+    let active = countAliveNonBossEnemies();
+    let remainingToSpawn = roundEnemyTotal - roundEnemiesSpawned;
+    if(remainingToSpawn <= 0) return;
+
+    let amount = forceFill ? roundMaxActiveEnemies - active : getWaveSpawnSize();
+    amount = Math.min(amount, roundMaxActiveEnemies - active, remainingToSpawn);
+
+    if(amount <= 0) return;
+
+    for(let i=0;i<amount;i++){
+        if(spawnEnemyForCurrentRound()){
+            roundEnemiesSpawned++;
+        }
+    }
+
+    if(!forceFill){
+        waveMessageTimer = 80;
+    }
+}
+
+function getBossHelperTotal(){
+    let tier = Math.max(1, getRoundTier());
+    return Math.min(22, 2 + tier * 2);
+}
+
+function getBossMaxHelpersAlive(){
+    let tier = Math.max(1, getRoundTier());
+    return Math.min(5, 1 + Math.ceil(tier / 2));
+}
+
+function spawnBossHelperWave(forceFill){
+    if(!isBossRound()) return;
+    if(countAliveBosses() <= 0) return;
+
+    let currentTier = Math.max(1, getRoundTier());
+    let helperType = getSpecialEnemyByTier(currentTier)?.type || "melee";
+    let activeHelpers = countAliveNonBossEnemies();
+    let remainingHelpers = bossHelperTotal - bossHelpersSpawned;
+    if(remainingHelpers <= 0) return;
+
+    let amount = forceFill ? bossMaxHelpersAlive - activeHelpers : Math.min(2 + Math.floor(currentTier / 3), bossMaxHelpersAlive - activeHelpers);
+    amount = Math.min(amount, bossMaxHelpersAlive - activeHelpers, remainingHelpers);
+
+    if(amount <= 0) return;
+
+    announceSpecialEnemyForTier(currentTier);
+
+    for(let i=0;i<amount;i++){
+        if(helperType === "melee"){
+            createNormalEnemy();
+        }else{
+            spawnSpecialEnemy(helperType);
+        }
+        bossHelpersSpawned++;
+    }
+
+    if(!forceFill){
+        waveMessageTimer = 80;
+    }
+}
+
+function updateWaveSpawning(){
+    if(roundBreakActive) return;
+
+    if(isBossRound()){
+        if(bossHelperSpawnCooldown > 0) bossHelperSpawnCooldown--;
+
+        if(bossHelperSpawnCooldown <= 0 && countAliveBosses() > 0 && countAliveNonBossEnemies() < bossMaxHelpersAlive && bossHelpersSpawned < bossHelperTotal){
+            spawnBossHelperWave(false);
+            bossHelperSpawnCooldown = Math.max(90, 170 - getRoundTier() * 5);
+        }
+
+        return;
+    }
+
+    if(waveSpawnCooldown > 0) waveSpawnCooldown--;
+
+    if(waveSpawnCooldown <= 0 && countAliveNonBossEnemies() < roundMaxActiveEnemies && roundEnemiesSpawned < roundEnemyTotal){
+        spawnWaveEnemies(false);
+        waveSpawnCooldown = Math.max(65, 130 - getRoundTier() * 5);
+    }
+}
+
+function isRoundCleared(){
+    if(isBossRound()){
+        return false;
+    }
+
+    return roundEnemiesSpawned >= roundEnemyTotal && countAliveNonBossEnemies() <= 0;
+}
+
+function startNextRound(){
+    if(roundBreakActive) return;
+    beginRoundBreak();
+}
+
+function beginRoundBreak(){
+    roundBreakActive = true;
+    roundBreakTimer = ROUND_BREAK_FRAMES;
+
+    coins += 5;
+    roundCoinMessageTimer = 140;
+    updateShopText("Ronda completada: +5 monedas. Descanso de 10 segundos.");
+
+    arrows = [];
+    enemyArrows = [];
+    lightningBolts = [];
+    thrownSpears = [];
+    enemyAreaAttacks = [];
+    enemies = [];
+    bossPortal = null;
+
+    stopCharges();
+    axeEffect = null;
+    spearMeleeEffect = null;
+    magicEffectTimer = 0;
+
+    cat = null;
+    summonUsedThisRound = false;
+    helicopter = null;
+    helicopterUsedThisRound = false;
+    waveMessageTimer = 0;
+}
+
+function updateRoundBreak(){
+    if(!roundBreakActive) return;
+
+    if(roundBreakTimer > 0){
+        roundBreakTimer--;
+    }
+
+    if(roundBreakTimer <= 0){
+        finishRoundBreak();
+    }
+}
+
+function finishRoundBreak(){
+    roundBreakActive = false;
+    roundBreakTimer = 0;
+
+    round++;
+    unlockUpgradeLimit();
+
+    if(round === 10){
+        catTutorialMessageTimer = 520;
+    }
+
+    player.hp += 20;
+    if(player.hp > player.maxHp) player.hp = player.maxHp;
+
+    arrows = [];
+    enemyArrows = [];
+    lightningBolts = [];
+    thrownSpears = [];
+    enemyAreaAttacks = [];
+    bossPortal = null;
+
+    stopCharges();
+    axeEffect = null;
+    spearMeleeEffect = null;
+    magicEffectTimer = 0;
+
+    cat = null;
+    summonUsedThisRound = false;
+    helicopter = null;
+    helicopterUsedThisRound = false;
+
+    spawnEnemies();
+}
+
+function spawnEnemies(){
+    unlockUpgradeLimit();
+    rebuildWorldDecorations();
+
+    enemies = [];
+    enemyArrows = [];
+    enemyAreaAttacks = [];
+    bossPortal = null;
+
+    roundEnemyTotal = 0;
+    roundEnemiesSpawned = 0;
+    roundMaxActiveEnemies = getRoundMaxActiveEnemies();
+    waveSpawnCooldown = 70;
+    waveMessageTimer = 0;
+    bossHelperTotal = 0;
+    bossHelpersSpawned = 0;
+    bossMaxHelpersAlive = getBossMaxHelpersAlive();
+    bossHelperSpawnCooldown = 90;
+
+    if(isBossRound()){
+        spawnBoss();
+        bossHelperTotal = getBossHelperTotal();
+        bossMaxHelpersAlive = getBossMaxHelpersAlive();
+        spawnBossHelperWave(true);
+        return;
+    }
+
+    roundEnemyTotal = getRoundEnemyTotal();
+    spawnWaveEnemies(true);
+}
+
+function closeAllMenuPanels(){
+    settingsPanel.style.display = "none";
+    customizePanel.style.display = "none";
+    shopPanel.style.display = "none";
+    premiumShopPanel.style.display = "none";
+}
+
+function openMenuPanel(panel){
+    let wasOpen = panel.style.display === "block";
+    closeAllMenuPanels();
+
+    if(!wasOpen){
+        panel.style.display = "block";
+        panel.scrollTop = 0;
+        const menuBox = document.getElementById("menuBox");
+        if(menuBox) menuBox.scrollTop = 0;
+    }
+}
+
+updateCharacterButtons();
+updateShopText();
+updatePremiumShopText();
+updatePremiumCustomizeButtons();
+refreshPlayerStats(false);
+spawnEnemies();
+
+playBtn.onclick = ()=>{
+    const menuTutorial = document.getElementById("menuTutorial");
+    if(menuTutorial){
+        menuTutorial.style.display = "none";
+    }
+
+    menu.style.display = "none";
+    topHoverZone.style.display = "block";
+    topBar.style.display = "flex";
+    gameWrapper.style.display = "flex";
+    gameStarted = true;
+    gamePaused = false;
+    setCanvasSize("max");
+    updateHudBar();
+
+    playGameMusic();
+};
+
+settingsBtn.onclick = ()=>{
+    openMenuPanel(settingsPanel);
+};
+
+customizeBtn.onclick = ()=>{
+    updateCharacterButtons();
+    updatePremiumCustomizeButtons();
+    openMenuPanel(customizePanel);
+};
+
+shopBtn.onclick = ()=>{
+    updateShopText();
+    openMenuPanel(shopPanel);
+};
+
+premiumShopBtn.onclick = ()=>{
+    updatePremiumShopText();
+    openMenuPanel(premiumShopPanel);
+};
+
+closePremiumShopBtn.onclick = ()=>{
+    premiumShopPanel.style.display = "none";
+};
+
+closePremiumShopBottomBtn.onclick = ()=>{
+    premiumShopPanel.style.display = "none";
+};
+
+premiumGoTopBtn.onclick = ()=>{
+    premiumShopPanel.scrollTop = 0;
+};
+
+shopDamageBtn.onclick = ()=> buyShopDamage();
+shopSpeedBtn.onclick = ()=> buyShopSpeed();
+shopHpBtn.onclick = ()=> buyShopHp();
+shopSummonBtn.onclick = ()=> buyShopSummon();
+buyGems100Btn.onclick = ()=> startDritaniumPurchase(DRITANIUM_PACK_100);
+buyGems500Btn.onclick = ()=> startDritaniumPurchase(DRITANIUM_PACK_500);
+buyGems1200Btn.onclick = ()=> startDritaniumPurchase(DRITANIUM_PACK_1200);
+
+buyDritaniumSwordBtn.onclick = ()=> buyPremiumItem("dritaniumSword", "Espada de Dritanio");
+buyOrangeEffectBtn.onclick = ()=> buyPremiumItem("orangeEffect", "Efecto naranja");
+buyLionPetBtn.onclick = ()=> buyPremiumItem("lionPet", "El despertar del león");
+buyHeroSwordBtn.onclick = ()=> buyPremiumItem("heroSword", "Héroe de la Espada");
+buyBattlePassBtn.onclick = ()=> buyPremiumItem("battlePass", "Pase de batalla");
+claimBattlePassBtn.onclick = ()=> claimBattlePassReward();
+buyLegendaryCatoBtn.onclick = ()=> buyPremiumItem("legendaryCato", "Cato el Gato Legendario");
+buyCarBtn.onclick = ()=> buyPremiumItem("car", "Coche de Dritanio");
+buyMinigunBtn.onclick = ()=> buyPremiumItem("minigun", "Metralleta");
+buyHelicopterBtn.onclick = ()=> buyPremiumItem("helicopter", "Helicóptero");
+
+equipNormalSwordBtn.onclick = ()=> equipPremium("weapon", "normal");
+equipDritaniumSwordBtn.onclick = ()=> equipPremium("weapon", "dritaniumSword");
+equipMinigunBtn.onclick = ()=> equipPremium("weapon", "minigun");
+equipOrangeEffectBtn.onclick = ()=> equipPremium("effect", "orange");
+equipNoEffectBtn.onclick = ()=> equipPremium("effect", "none");
+equipLionPetBtn.onclick = ()=> equipPremium("pet", "lion");
+equipCatPetBtn.onclick = ()=> equipPremium("pet", "cat");
+equipCarBtn.onclick = ()=> equipPremium("mount", "car");
+equipNoMountBtn.onclick = ()=> equipPremium("mount", "none");
+equipHelicopterBtn.onclick = ()=> equipPremium("support", "helicopter");
+equipNoSupportBtn.onclick = ()=> equipPremium("support", "none");
+
+heroSwordCharacter.onclick = ()=>{
+    if(!ownsPremium("heroSword")) return;
+    player.character = "swordHero";
+    stopCharges();
+    refreshPlayerStats(true);
+    updateCharacterText();
+};
+
+legendaryCatoCharacter.onclick = ()=>{
+    if(!ownsPremium("legendaryCato")) return;
+    player.character = "legendaryCato";
+    stopCharges();
+    refreshPlayerStats(true);
+    updateCharacterText();
+};
+
+
+backButton.onclick = ()=>{
+    menu.style.display = "flex";
+    topBar.style.display = "none";
+    gameWrapper.style.display = "none";
+    infoOverlay.style.display = "none";
+    gameStarted = false;
+    gamePaused = false;
+    infoOpen = false;
+
+    updateShopText();
+    updatePremiumShopText();
+};
+
+infoButton.onclick = ()=> toggleInfo();
+closeInfo.onclick = ()=> closeInfoPanel();
+
+minButton.onclick = ()=> setCanvasSize("min");
+normalSizeButton.onclick = ()=> setCanvasSize("normal");
+maxButton.onclick = ()=> setCanvasSize("max");
+
+document.getElementById("easyBtn").onclick = ()=>{
+    enemyDamage = 0.04;
+    difficultyText.innerText = "Dificultad actual: Fácil";
+};
+
+document.getElementById("normalBtn").onclick = ()=>{
+    enemyDamage = 0.08;
+    difficultyText.innerText = "Dificultad actual: Normal";
+};
+
+document.getElementById("hardBtn").onclick = ()=>{
+    enemyDamage = 0.15;
+    difficultyText.innerText = "Dificultad actual: Difícil";
+};
+
+document.getElementById("blueColor").onclick = ()=> player.color = "cyan";
+document.getElementById("greenColor").onclick = ()=> player.color = "lime";
+document.getElementById("purpleColor").onclick = ()=> player.color = "purple";
+document.getElementById("whiteColor").onclick = ()=> player.color = "white";
+
+document.getElementById("swordCharacter").onclick = ()=>{
+    player.character = "sword";
+    stopCharges();
+    refreshPlayerStats(true);
+    updateCharacterText();
+};
+
+lancerCharacter.onclick = ()=>{
+    if(!lancerUnlocked) return;
+
+    player.character = "lancer";
+    stopCharges();
+    refreshPlayerStats(true);
+    updateCharacterText();
+};
+
+gladiatorCharacter.onclick = ()=>{
+    if(!gladiatorUnlocked) return;
+
+    player.character = "gladiator";
+    stopCharges();
+    refreshPlayerStats(true);
+    updateCharacterText();
+};
+
+archerCharacter.onclick = ()=>{
+    if(!archerUnlocked) return;
+
+    player.character = "archer";
+    stopCharges();
+    refreshPlayerStats(true);
+    updateCharacterText();
+};
+
+berserkerCharacter.onclick = ()=>{
+    if(!berserkerUnlocked) return;
+
+    player.character = "berserker";
+    stopCharges();
+    refreshPlayerStats(true);
+    updateCharacterText();
+};
+
+mageCharacter.onclick = ()=>{
+    if(!mageUnlocked) return;
+
+    player.character = "mage";
+    stopCharges();
+    refreshPlayerStats(true);
+    updateCharacterText();
+};
+
+resetUnlocksBtn.onclick = ()=>{
+    localStorage.removeItem("archerUnlocked");
+    localStorage.removeItem("berserkerUnlocked");
+    localStorage.removeItem("mageUnlocked");
+    localStorage.removeItem("lancerUnlocked");
+    localStorage.removeItem("gladiatorUnlocked");
+
+    archerUnlocked = false;
+    berserkerUnlocked = false;
+    mageUnlocked = false;
+    lancerUnlocked = false;
+    gladiatorUnlocked = false;
+
+    if(player.character === "archer" || player.character === "berserker" || player.character === "mage" || player.character === "lancer" || player.character === "gladiator"){
+        player.character = "sword";
+        updateCharacterText();
+    }
+
+    updateCharacterButtons();
+};
+
+function stopCharges(){
+    chargingArrow = false;
+    arrowCharge = 0;
+    chargingAxe = false;
+    axeCharge = 0;
+    chargingMagic = false;
+    magicCharge = 0;
+    chargingSpear = false;
+    spearCharge = 0;
+    chargingGladiatorSword = false;
+    gladiatorSwordCharge = 0;
+    player.blocking = false;
+}
+
+function togglePause(){
+    if(!gameStarted) return;
+    if(infoOpen) return;
+
+    gamePaused = !gamePaused;
+}
+
+function toggleInfo(){
+    if(!gameStarted) return;
+
+    if(infoOpen){
+        closeInfoPanel();
+    }else{
+        openInfo();
+    }
+}
+
+function openInfo(){
+    gamePaused = true;
+    infoOpen = true;
+    updateInfoText();
+    infoOverlay.style.display = "flex";
+}
+
+function closeInfoPanel(){
+    infoOverlay.style.display = "none";
+    infoOpen = false;
+    gamePaused = false;
+}
+
+document.addEventListener("keydown",(e)=>{
+    keys[e.key.toLowerCase()] = true;
+
+    if(e.key === "Escape" && !gameStarted){
+        closeAllMenuPanels();
+        return;
+    }
+
+    if(gameStarted){
+        playGameMusic();
+    }
+
+    if(e.key.toLowerCase() === "p") togglePause();
+    if(e.key.toLowerCase() === "i") toggleInfo();
+
+    if(e.key.toLowerCase() === "e" && gameStarted && !gamePaused && player.character === "swordHero"){
+        shootHeroRay();
+    }
+
+    if(e.key.toLowerCase() === "e" && gameStarted && !gamePaused && player.character === "gladiator"){
+        player.blocking = true;
+    }
+
+    if(e.key.toLowerCase() === "h" && gameStarted && !gamePaused){
+        summonHelicopter();
+    }
+
+    if(e.code === "Space"){
+        firingMinigun = false;
+    }
+
+    if(e.code === "Space" && gameStarted && !gamePaused && player.hp > 0){
+        e.preventDefault();
+
+        if(equippedPremiumWeapon === "minigun"){
+            firingMinigun = true;
+            return;
+        }
+
+        if(player.character === "legendaryCato"){
+            legendaryCatoMapAttack();
+            return;
+        }
+
+        if(player.character === "sword" || player.character === "swordHero"){
+            attack();
+        }
+
+        if(player.character === "lancer"){
+            chargingSpear = true;
+        }
+
+        if(player.character === "archer"){
+            chargingArrow = true;
+        }
+
+        if(player.character === "berserker"){
+            chargingAxe = true;
+        }
+
+        if(player.character === "mage"){
+            chargingMagic = true;
+        }
+
+        if(player.character === "gladiator"){
+            chargingGladiatorSword = true;
+        }
+    }
+
+    if(!gameStarted || gamePaused || player.hp <= 0) return;
+
+    if(e.key === "1"){
+        if(coins >= SHOP_DAMAGE_COST && upgradeLevels.damage < maxUpgradeLevel){
+            coins -= SHOP_DAMAGE_COST;
+            upgrades.damage += 10;
+            upgradeLevels.damage++;
+            updateShopText();
+        }
+    }
+
+    if(e.key === "2"){
+        if(coins >= SHOP_SPEED_COST && upgradeLevels.speed < maxUpgradeLevel){
+            coins -= SHOP_SPEED_COST;
+            upgrades.speed += 1;
+            player.speed = upgrades.speed;
+            upgradeLevels.speed++;
+            updateShopText();
+        }
+    }
+
+    if(e.key === "3"){
+        if(coins >= SHOP_HP_COST && upgradeLevels.hp < maxUpgradeLevel){
+            coins -= SHOP_HP_COST;
+            upgrades.maxHp += 10;
+            player.maxHp = upgrades.maxHp;
+            player.hp += 20;
+
+            if(player.hp > player.maxHp){
+                player.hp = player.maxHp;
+            }
+
+            upgradeLevels.hp++;
+            updateShopText();
+        }
+    }
+
+    if(e.key.toLowerCase() === "q"){
+        summonCat();
+    }
+
+    if(e.key === "4"){
+        if(summonUnlocked && coins >= SHOP_SUMMON_COST && summonLevel < maxSummonLevel){
+            coins -= SHOP_SUMMON_COST;
+            summonLevel++;
+            updateShopText();
+        }
+    }
+});
+
+document.addEventListener("keyup",(e)=>{
+    keys[e.key.toLowerCase()] = false;
+
+    if(e.key.toLowerCase() === "e"){
+        player.blocking = false;
+    }
+
+    if(e.code === "Space"){
+        firingMinigun = false;
+    }
+
+    if(e.code === "Space" && gameStarted && !gamePaused && player.hp > 0){
+
+        if(player.character === "lancer" && chargingSpear){
+            if(spearCharge >= 45){
+                throwSpear();
+            }else{
+                lancerAttack();
+            }
+            chargingSpear = false;
+            spearCharge = 0;
+        }
+
+
+    if(player.character === "archer" && chargingArrow){
+            shootArrow();
+            chargingArrow = false;
+            arrowCharge = 0;
+        }
+
+        if(player.character === "berserker" && chargingAxe){
+            berserkerAttack();
+            chargingAxe = false;
+            axeCharge = 0;
+        }
+
+        if(player.character === "mage" && chargingMagic){
+            castLightning();
+            chargingMagic = false;
+            magicCharge = 0;
+        }
+
+        if(player.character === "gladiator" && chargingGladiatorSword){
+            gladiatorAttack();
+            chargingGladiatorSword = false;
+            gladiatorSwordCharge = 0;
+        }
+    }
+});
+
+function getSwordBox(){
+    let sword = {x:player.x,y:player.y,w:40,h:40};
+
+    if(player.direction === "right"){
+        sword.x = player.x + player.w;
+        sword.y = player.y + player.h/2 - 15;
+        sword.w = 45;
+        sword.h = 30;
+    }
+
+    if(player.direction === "left"){
+        sword.x = player.x - 45;
+        sword.y = player.y + player.h/2 - 15;
+        sword.w = 45;
+        sword.h = 30;
+    }
+
+    if(player.direction === "up"){
+        sword.x = player.x + player.w/2 - 15;
+        sword.y = player.y - 45;
+        sword.w = 30;
+        sword.h = 45;
+    }
+
+    if(player.direction === "down"){
+        sword.x = player.x + player.w/2 - 15;
+        sword.y = player.y + player.h;
+        sword.w = 30;
+        sword.h = 45;
+    }
+
+    return sword;
+}
+
+function getSpearBox(){
+    let reach = 95;
+    let width = 22;
+
+    if(player.direction === "right"){
+        return {
+            x: player.x + player.w,
+            y: player.y + player.h/2 - width/2,
+            w: reach,
+            h: width
+        };
+    }
+
+    if(player.direction === "left"){
+        return {
+            x: player.x - reach,
+            y: player.y + player.h/2 - width/2,
+            w: reach,
+            h: width
+        };
+    }
+
+    if(player.direction === "up"){
+        return {
+            x: player.x + player.w/2 - width/2,
+            y: player.y - reach,
+            w: width,
+            h: reach
+        };
+    }
+
+    return {
+        x: player.x + player.w/2 - width/2,
+        y: player.y + player.h,
+        w: width,
+        h: reach
+    };
+}
+
+function attack(){
+    if(player.attacking) return;
+
+    player.attacking = true;
+
+    if(player.character === "sword" || player.character === "swordHero"){
+        swordAttack();
+    }
+
+    setTimeout(()=>{
+        player.attacking = false;
+    },180);
+}
+
+function swordAttack(){
+    let sword = getSwordBox();
+
+    enemies.forEach(enemy=>{
+        if(enemy.hp > 0){
+            if(
+                sword.x < enemy.x + enemy.w &&
+                sword.x + sword.w > enemy.x &&
+                sword.y < enemy.y + enemy.h &&
+                sword.y + sword.h > enemy.y
+            ){
+                damageEnemy(enemy, upgrades.damage, {premium:true});
+
+                if(enemy.hp <= 0){
+                    // +5 monedas se dan automáticamente al derrotar al enemigo.
+                }
+            }
+        }
+    });
+}
+
+function gladiatorAttack(){
+    if(player.attacking) return;
+
+    player.attacking = true;
+
+    let sword = getSwordBox();
+    let chargePercent = gladiatorSwordCharge / maxGladiatorSwordCharge;
+    let damage = upgrades.damage;
+
+    if(chargePercent >= 0.7){
+        damage = upgrades.damage * 2;
+    }
+
+    gladiatorSwordEffect = {
+        x:sword.x,
+        y:sword.y,
+        w:sword.w,
+        h:sword.h,
+        life:12,
+        charged:chargePercent >= 0.7
+    };
+
+    enemies.forEach(enemy=>{
+        if(enemy.hp > 0){
+            if(
+                sword.x < enemy.x + enemy.w &&
+                sword.x + sword.w > enemy.x &&
+                sword.y < enemy.y + enemy.h &&
+                sword.y + sword.h > enemy.y
+            ){
+                damageEnemy(enemy, damage, {premium:true});
+
+                if(enemy.hp <= 0){
+                    // +5 monedas se dan automáticamente al derrotar al enemigo.
+                }
+            }
+        }
+    });
+
+    setTimeout(()=>{
+        player.attacking = false;
+    },220);
+}
+
+function lancerAttack(){
+    if(player.attacking) return;
+
+    player.attacking = true;
+
+    let spear = getSpearBox();
+
+    spearMeleeEffect = {
+        x: spear.x,
+        y: spear.y,
+        w: spear.w,
+        h: spear.h,
+        life: 10
+    };
+
+    enemies.forEach(enemy=>{
+        if(enemy.hp > 0){
+            if(
+                spear.x < enemy.x + enemy.w &&
+                spear.x + spear.w > enemy.x &&
+                spear.y < enemy.y + enemy.h &&
+                spear.y + spear.h > enemy.y
+            ){
+                damageEnemy(enemy, upgrades.damage * 0.9, {premium:true});
+
+                if(enemy.hp <= 0){
+                    // +5 monedas se dan automáticamente al derrotar al enemigo.
+                }
+            }
+        }
+    });
+
+    setTimeout(()=>{
+        player.attacking = false;
+    },220);
+}
+
+function throwSpear(){
+    let dx = 0;
+    let dy = 0;
+
+    if(player.direction === "right") dx = 1;
+    if(player.direction === "left") dx = -1;
+    if(player.direction === "up") dy = -1;
+    if(player.direction === "down") dy = 1;
+
+    let chargePercent = spearCharge / maxSpearCharge;
+    let length = 60 + chargePercent * 55;
+    let thickness = 12 + chargePercent * 8;
+    let damage = premiumDamage(upgrades.damage + 20 + chargePercent * 70);
+    let speed = 9 + chargePercent * 5;
+
+    let w = thickness;
+    let h = thickness;
+
+    if(dx !== 0){
+        w = length;
+        h = thickness;
+    }
+
+    if(dy !== 0){
+        w = thickness;
+        h = length;
+    }
+
+    thrownSpears.push({
+        x: player.x + player.w/2 - w/2,
+        y: player.y + player.h/2 - h/2,
+        w: w,
+        h: h,
+        dx: dx,
+        dy: dy,
+        speed: speed,
+        damage: damage,
+        life: 90,
+        hitEnemies: []
+    });
+}
+
+function berserkerAttack(){
+    if(player.attacking) return;
+
+    player.attacking = true;
+
+    let chargePercent = axeCharge / maxAxeCharge;
+    let areaSize = 80 + chargePercent * 110;
+    let damage = premiumDamage(upgrades.damage * 0.6 + 10 + chargePercent * 45);
+
+    let area = {
+        x: player.x + player.w / 2 - areaSize / 2,
+        y: player.y + player.h / 2 - areaSize / 2,
+        w: areaSize,
+        h: areaSize
+    };
+
+    axeEffect = {
+        x: area.x,
+        y: area.y,
+        w: area.w,
+        h: area.h,
+        life: 14
+    };
+
+    enemies.forEach(enemy=>{
+        if(enemy.hp > 0){
+            if(
+                area.x < enemy.x + enemy.w &&
+                area.x + area.w > enemy.x &&
+                area.y < enemy.y + enemy.h &&
+                area.y + area.h > enemy.y
+            ){
+                damageEnemy(enemy, damage, {premium:true});
+
+                if(enemy.hp <= 0){
+                    // +5 monedas se dan automáticamente al derrotar al enemigo.
+                }
+            }
+        }
+    });
+
+    setTimeout(()=>{
+        player.attacking = false;
+    },250);
+}
+
+function shootArrow(){
+    let dx = 0;
+    let dy = 0;
+
+    if(player.direction === "right") dx = 1;
+    if(player.direction === "left") dx = -1;
+    if(player.direction === "up") dy = -1;
+    if(player.direction === "down") dy = 1;
+
+    let chargePercent = arrowCharge / maxArrowCharge;
+    let size = 10 + chargePercent * 30;
+    let damage = premiumDamage(upgrades.damage + chargePercent * 60);
+    let speed = 8 + chargePercent * 6;
+
+    arrows.push({
+        x:player.x + player.w/2 - size/2,
+        y:player.y + player.h/2 - size/2,
+        w:size,
+        h:size,
+        dx:dx,
+        dy:dy,
+        speed:speed,
+        damage:damage,
+        life:100
+    });
+}
+
+function castLightning(){
+    let dx = 0;
+    let dy = 0;
+
+    if(player.direction === "right") dx = 1;
+    if(player.direction === "left") dx = -1;
+    if(player.direction === "up") dy = -1;
+    if(player.direction === "down") dy = 1;
+
+    let chargePercent = magicCharge / maxMagicCharge;
+
+    let thickness = 12 + chargePercent * 45;
+    let length = 35 + chargePercent * 120;
+    let damage = premiumDamage(upgrades.damage * 0.85 + 12 + chargePercent * 95);
+    let speed = 12 + chargePercent * 5;
+    let pierce = chargePercent >= 0.7;
+
+    let w = thickness;
+    let h = thickness;
+
+    if(dx !== 0){
+        w = length;
+        h = thickness;
+    }
+
+    if(dy !== 0){
+        w = thickness;
+        h = length;
+    }
+
+    lightningBolts.push({
+        x:player.x + player.w/2 - w/2,
+        y:player.y + player.h/2 - h/2,
+        w:w,
+        h:h,
+        dx:dx,
+        dy:dy,
+        speed:speed,
+        damage:damage,
+        life:70,
+        pierce:pierce,
+        hitEnemies:[]
+    });
+
+    magicEffectTimer = 12;
+}
+
+function enemyShoot(enemy){
+    let dx = player.x - enemy.x;
+    let dy = player.y - enemy.y;
+    let distance = Math.sqrt(dx*dx + dy*dy);
+
+    if(distance > 0){
+        dx /= distance;
+        dy /= distance;
+    }
+
+    enemyArrows.push({
+        x:enemy.x + enemy.w / 2,
+        y:enemy.y + enemy.h / 2,
+        w:enemy.projectileSize || 12,
+        h:enemy.projectileSize || 12,
+        dx:dx,
+        dy:dy,
+        speed:enemy.projectileSpeed || 5,
+        damage:enemy.projectileDamage || (6 + round * 0.5),
+        effect:enemy.projectileEffect || "none",
+        ownerType:enemy.type || "enemy",
+        life:160
+    });
+}
+
+function summonCat(){
+    if(!summonUnlocked) return;
+    if(summonUsedThisRound) return;
+    if(cat !== null) return;
+
+    summonUsedThisRound = true;
+
+    let isLion = equippedPremiumPet === "lion" && ownsPremium("lionPet");
+
+    cat = {
+        x: player.x - 40,
+        y: player.y,
+        w: isLion ? 55 : 35,
+        h: isLion ? 55 : 35,
+        speed: isLion ? 4.2 + summonLevel * 0.22 : 2.4 + summonLevel * 0.15,
+        damage: isLion ? 35 + summonLevel * 8 : 8 + summonLevel * 4,
+        attackCooldown: 0,
+        type: isLion ? "lion" : "cat"
+    };
+}
+
+function updateCat(){
+    if(cat === null) return;
+
+    let aliveEnemies = enemies.filter(enemy=>enemy.hp > 0);
+    if(aliveEnemies.length === 0) return;
+
+    let target = aliveEnemies[0];
+    let bestDistance = Infinity;
+
+    aliveEnemies.forEach(enemy=>{
+        let dx = enemy.x - cat.x;
+        let dy = enemy.y - cat.y;
+        let distance = Math.sqrt(dx*dx + dy*dy);
+
+        if(distance < bestDistance){
+            bestDistance = distance;
+            target = enemy;
+        }
+    });
+
+    let dx = target.x - cat.x;
+    let dy = target.y - cat.y;
+    let distance = Math.sqrt(dx*dx + dy*dy);
+
+    if(distance > 0){
+        dx /= distance;
+        dy /= distance;
+    }
+
+    cat.x += dx * cat.speed;
+    cat.y += dy * cat.speed;
+
+    if(cat.attackCooldown > 0){
+        cat.attackCooldown--;
+    }
+
+    if(
+        cat.x < target.x + target.w &&
+        cat.x + cat.w > target.x &&
+        cat.y < target.y + target.h &&
+        cat.y + cat.h > target.y
+    ){
+        if(cat.attackCooldown <= 0){
+            damageEnemy(target, cat.damage, {premium:false});
+
+            if(cat.type === "lion"){
+                enemies.forEach(enemy=>{
+                    if(enemy !== target && enemy.hp > 0){
+                        let dx = enemy.x - cat.x;
+                        let dy = enemy.y - cat.y;
+                        let distance = Math.sqrt(dx*dx + dy*dy);
+                        if(distance < 95){
+                            damageEnemy(enemy, cat.damage * 0.45, {premium:false});
+                        }
+                    }
+                });
+            }
+
+            cat.attackCooldown = cat.type === "lion" ? 22 : 35;
+
+            if(target.hp <= 0){
+                // +5 monedas se dan automáticamente al derrotar al enemigo.
+            }
+        }
+    }
+}
+
+function updateProjectiles(){
+    arrows.forEach(arrow=>{
+        arrow.x += arrow.dx * arrow.speed;
+        arrow.y += arrow.dy * arrow.speed;
+        arrow.life--;
+
+        enemies.forEach(enemy=>{
+            if(enemy.hp > 0){
+                if(
+                    arrow.x < enemy.x + enemy.w &&
+                    arrow.x + arrow.w > enemy.x &&
+                    arrow.y < enemy.y + enemy.h &&
+                    arrow.y + arrow.h > enemy.y
+                ){
+                    damageEnemy(enemy, arrow.damage, {premium:false});
+                    arrow.life = 0;
+                    if(enemy.hp <= 0){
+                    // +5 monedas se dan automáticamente al derrotar al enemigo.
+                }
+                }
+            }
+        });
+    });
+
+    arrows = arrows.filter(arrow=>{
+        return arrow.life > 0 &&
+        arrow.x > -50 &&
+        arrow.x < getWorldWidth() + 50 &&
+        arrow.y > -50 &&
+        arrow.y < getWorldHeight() + 50;
+    });
+
+    thrownSpears.forEach(spear=>{
+        spear.x += spear.dx * spear.speed;
+        spear.y += spear.dy * spear.speed;
+        spear.life--;
+
+        enemies.forEach(enemy=>{
+            if(enemy.hp > 0){
+                let alreadyHit = spear.hitEnemies.includes(enemy);
+
+                if(
+                    !alreadyHit &&
+                    spear.x < enemy.x + enemy.w &&
+                    spear.x + spear.w > enemy.x &&
+                    spear.y < enemy.y + enemy.h &&
+                    spear.y + spear.h > enemy.y
+                ){
+                    damageEnemy(enemy, spear.damage, {premium:false});
+                    spear.hitEnemies.push(enemy);
+
+                    if(enemy.hp <= 0){
+                    // +5 monedas se dan automáticamente al derrotar al enemigo.
+                }
+                }
+            }
+        });
+    });
+
+    thrownSpears = thrownSpears.filter(spear=>{
+        return spear.life > 0 &&
+        spear.x > -150 &&
+        spear.x < getWorldWidth() + 150 &&
+        spear.y > -150 &&
+        spear.y < getWorldHeight() + 150;
+    });
+
+    lightningBolts.forEach(bolt=>{
+        bolt.x += bolt.dx * bolt.speed;
+        bolt.y += bolt.dy * bolt.speed;
+        bolt.life--;
+
+        enemies.forEach(enemy=>{
+            if(enemy.hp > 0){
+                let alreadyHit = bolt.hitEnemies.includes(enemy);
+
+                if(
+                    !alreadyHit &&
+                    bolt.x < enemy.x + enemy.w &&
+                    bolt.x + bolt.w > enemy.x &&
+                    bolt.y < enemy.y + enemy.h &&
+                    bolt.y + bolt.h > enemy.y
+                ){
+                    damageEnemy(enemy, bolt.damage, {premium:false});
+                    bolt.hitEnemies.push(enemy);
+
+                    if(!bolt.pierce){
+                        bolt.life = 0;
+                    }
+
+                    if(enemy.hp <= 0){
+                    // +5 monedas se dan automáticamente al derrotar al enemigo.
+                }
+                }
+            }
+        });
+    });
+
+    lightningBolts = lightningBolts.filter(bolt=>{
+        return bolt.life > 0 &&
+        bolt.x > -150 &&
+        bolt.x < getWorldWidth() + 150 &&
+        bolt.y > -150 &&
+        bolt.y < getWorldHeight() + 150;
+    });
+
+    enemyArrows.forEach(arrow=>{
+        arrow.x += arrow.dx * arrow.speed;
+        arrow.y += arrow.dy * arrow.speed;
+        arrow.life--;
+
+        if(
+            arrow.x < player.x + player.w &&
+            arrow.x + arrow.w > player.x &&
+            arrow.y < player.y + player.h &&
+            arrow.y + arrow.h > player.y
+        ){
+            if(player.character === "gladiator" && player.blocking){
+                arrow.life = 0;
+            }else{
+                if(!isPlayerImmortal()){
+                    player.hp -= arrow.damage;
+
+                    if(arrow.effect === "slow"){
+                        frostSlowTimer = Math.max(frostSlowTimer, 80);
+                    }
+
+                    if(arrow.effect === "poison"){
+                        player.hp -= arrow.damage * 0.45;
+                    }
+
+                    if(arrow.effect === "light"){
+                        player.hp -= arrow.damage * 0.25;
+                    }
+
+                    if(arrow.effect === "abyss"){
+                        player.hp -= arrow.damage * 0.7;
+                        frostSlowTimer = Math.max(frostSlowTimer, 45);
+                    }
+                }
+                arrow.life = 0;
+            }
+        }
+    });
+
+    enemyArrows = enemyArrows.filter(arrow=>{
+        return arrow.life > 0 &&
+        arrow.x > -50 &&
+        arrow.x < getWorldWidth() + 50 &&
+        arrow.y > -50 &&
+        arrow.y < getWorldHeight() + 50;
+    });
+}
+
+function update(){
+    if(gamePaused) return;
+
+    unlockUpgradeLimit();
+
+    refreshPlayerStats(false);
+
+    let moveSpeed = getPlayerMoveSpeed();
+
+    if(keys["w"]){
+        player.y -= moveSpeed;
+        player.direction = "up";
+    }
+
+    if(keys["s"]){
+        player.y += moveSpeed;
+        player.direction = "down";
+    }
+
+    if(keys["a"]){
+        player.x -= moveSpeed;
+        player.direction = "left";
+    }
+
+    if(keys["d"]){
+        player.x += moveSpeed;
+        player.direction = "right";
+    }
+
+    keepPlayerInside();
+
+    if(chargingArrow){
+        arrowCharge += 2;
+        if(arrowCharge > maxArrowCharge) arrowCharge = maxArrowCharge;
+    }
+
+    if(chargingAxe){
+        axeCharge += 2;
+        if(axeCharge > maxAxeCharge) axeCharge = maxAxeCharge;
+    }
+
+    if(chargingMagic){
+        magicCharge += 2;
+        if(magicCharge > maxMagicCharge) magicCharge = maxMagicCharge;
+    }
+
+    if(chargingSpear){
+        spearCharge += 2;
+        if(spearCharge > maxSpearCharge) spearCharge = maxSpearCharge;
+    }
+
+    if(chargingGladiatorSword){
+        gladiatorSwordCharge += 2;
+        if(gladiatorSwordCharge > maxGladiatorSwordCharge) gladiatorSwordCharge = maxGladiatorSwordCharge;
+    }
+
+    if(axeEffect){
+        axeEffect.life--;
+        if(axeEffect.life <= 0) axeEffect = null;
+    }
+
+    if(spearMeleeEffect){
+        spearMeleeEffect.life--;
+        if(spearMeleeEffect.life <= 0) spearMeleeEffect = null;
+    }
+
+    if(gladiatorSwordEffect){
+        gladiatorSwordEffect.life--;
+        if(gladiatorSwordEffect.life <= 0) gladiatorSwordEffect = null;
+    }
+
+    if(magicEffectTimer > 0){
+        magicEffectTimer--;
+    }
+
+    updateCat();
+    updateHelicopter();
+    updatePoison();
+    updateCarCollisions();
+
+    if(heroRayCooldown > 0) heroRayCooldown--;
+    if(premiumRewardMessageTimer > 0) premiumRewardMessageTimer--;
+
+    if(firingMinigun && equippedPremiumWeapon === "minigun"){
+        minigunCooldown--;
+        if(minigunCooldown <= 0){
+            shootMinigunBullet();
+            minigunCooldown = 4;
+        }
+    }
+
+    if(roundCoinMessageTimer > 0) roundCoinMessageTimer--;
+    if(waveMessageTimer > 0) waveMessageTimer--;
+    if(catTutorialMessageTimer > 0) catTutorialMessageTimer--;
+    if(bossBattleMessageTimer > 0) bossBattleMessageTimer--;
+    if(bossRewardMessageTimer > 0) bossRewardMessageTimer--;
+    if(bossPortalMessageTimer > 0) bossPortalMessageTimer--;
+    if(frostEnemyMessageTimer > 0) frostEnemyMessageTimer--;
+    if(specialEnemyMessageTimer > 0) specialEnemyMessageTimer--;
+    if(enemySpecialAttackMessageTimer > 0) enemySpecialAttackMessageTimer--;
+    if(frostSlowTimer > 0) frostSlowTimer--;
+    if(helicopterGunEffectTimer > 0) helicopterGunEffectTimer--;
+    if(summonMessageTimer > 0) summonMessageTimer--;
+    if(evolutionMessageTimer > 0) evolutionMessageTimer--;
+    if(ascensionMessageTimer > 0) ascensionMessageTimer--;
+    if(archerMessageTimer > 0) archerMessageTimer--;
+    if(berserkerMessageTimer > 0) berserkerMessageTimer--;
+    if(mageMessageTimer > 0) mageMessageTimer--;
+    if(lancerMessageTimer > 0) lancerMessageTimer--;
+    if(gladiatorMessageTimer > 0) gladiatorMessageTimer--;
+
+    updateProjectiles();
+    updateEnemyAreaAttacks();
+    updateWaveSpawning();
+    updateBossPortal();
+
+    enemies.forEach(enemy=>{
+        if(enemy.hp > 0){
+            enemy.changeTimer--;
+
+            if(enemy.changeTimer <= 0){
+                enemy.randomX = (Math.random() - 0.5) * 2;
+                enemy.randomY = (Math.random() - 0.5) * 2;
+                enemy.changeTimer = Math.floor(Math.random() * 80) + 40;
+            }
+
+            let dx = player.x - enemy.x;
+            let dy = player.y - enemy.y;
+            let distance = Math.sqrt(dx*dx + dy*dy);
+
+            if(distance > 0){
+                dx /= distance;
+                dy /= distance;
+            }
+
+            triggerEnemySpecialAttack(enemy, dx, dy, distance);
+
+            if(enemy.type === "melee"){
+                enemy.x += dx * enemy.speed + enemy.randomX;
+                enemy.y += dy * enemy.speed + enemy.randomY;
+            }
+
+            if(enemy.type === "archer"){
+                if(distance < 250){
+                    enemy.x -= dx * enemy.speed;
+                    enemy.y -= dy * enemy.speed;
+                }else if(distance > 350){
+                    enemy.x += dx * enemy.speed;
+                    enemy.y += dy * enemy.speed;
+                }
+
+                enemy.x += enemy.randomX * 0.4;
+                enemy.y += enemy.randomY * 0.4;
+
+                enemy.shootCooldown--;
+
+                if(enemy.shootCooldown <= 0){
+                    enemyShoot(enemy);
+                    enemy.shootCooldown = 160;
+                }
+            }
+
+            if(enemy.type === "frost"){
+                enemy.x += dx * enemy.speed + enemy.randomY * 0.9;
+                enemy.y += dy * enemy.speed + enemy.randomX * 0.9;
+
+                enemy.shootCooldown--;
+
+                if(enemy.shootCooldown <= 0){
+                    enemyShoot(enemy);
+                    enemy.shootCooldown = 85;
+                }
+            }
+
+            if(enemy.type === "sand"){
+                enemy.x += dx * enemy.speed * 0.85 + enemy.randomX * 0.35;
+                enemy.y += dy * enemy.speed * 0.85 + enemy.randomY * 0.35;
+            }
+
+            if(enemy.type === "poison"){
+                enemy.x += dx * enemy.speed * 0.75 + enemy.randomX * 0.9;
+                enemy.y += dy * enemy.speed * 0.75 + enemy.randomY * 0.9;
+
+                enemy.shootCooldown--;
+
+                if(enemy.shootCooldown <= 0){
+                    enemyShoot(enemy);
+                    enemy.shootCooldown = 78;
+                }
+            }
+
+            if(enemy.type === "shadow"){
+                enemy.x += dx * enemy.speed * 1.35 + enemy.randomX * 0.7;
+                enemy.y += dy * enemy.speed * 1.35 + enemy.randomY * 0.7;
+            }
+
+            if(enemy.type === "celestial"){
+                if(distance < 230){
+                    enemy.x -= dx * enemy.speed;
+                    enemy.y -= dy * enemy.speed;
+                }else{
+                    enemy.x += dx * enemy.speed * 0.55 + enemy.randomX * 0.5;
+                    enemy.y += dy * enemy.speed * 0.55 + enemy.randomY * 0.5;
+                }
+
+                enemy.shootCooldown--;
+
+                if(enemy.shootCooldown <= 0){
+                    enemyShoot(enemy);
+                    enemy.shootCooldown = 65;
+                }
+            }
+
+            if(enemy.type === "abyss"){
+                enemy.x += dx * enemy.speed + enemy.randomX * 1.1;
+                enemy.y += dy * enemy.speed + enemy.randomY * 1.1;
+
+                enemy.shootCooldown--;
+
+                if(enemy.shootCooldown <= 0){
+                    enemyShoot(enemy);
+                    enemy.shootCooldown = 52;
+                }
+            }
+
+            if(enemy.type === "boss"){
+                enemy.x += dx * enemy.speed + enemy.randomX * 0.45;
+                enemy.y += dy * enemy.speed + enemy.randomY * 0.45;
+
+                enemy.shootCooldown--;
+
+                if(enemy.shootCooldown <= 0){
+                    enemyShoot(enemy);
+                    enemy.shootCooldown = Math.max(90, 150 - (enemy.bossTier || 1) * 4);
+                }
+            }
+
+            if(enemy.dashTimer && enemy.dashTimer > 0){
+                enemy.x += (enemy.dashDx || 0) * (enemy.dashSpeed || 0);
+                enemy.y += (enemy.dashDy || 0) * (enemy.dashSpeed || 0);
+                enemy.dashTimer--;
+            }
+
+            if(enemy.x < 0) enemy.x = 0;
+            if(enemy.y < 0) enemy.y = 0;
+
+            if(enemy.x + enemy.w > getWorldWidth()){
+                enemy.x = getWorldWidth() - enemy.w;
+            }
+
+            if(enemy.y + enemy.h > getWorldHeight()){
+                enemy.y = getWorldHeight() - enemy.h;
+            }
+
+            if(
+                enemy.canContact !== false &&
+                player.x < enemy.x + enemy.w &&
+                player.x + player.w > enemy.x &&
+                player.y < enemy.y + enemy.h &&
+                player.y + player.h > enemy.y
+            ){
+                if(!(player.character === "gladiator" && player.blocking)){
+                    if(!isPlayerImmortal()){
+                        player.hp -= enemy.contactDamage || enemyDamage;
+
+                        if(enemy.type === "frost") frostSlowTimer = 70;
+                        if(enemy.type === "poison") player.hp -= (enemy.contactDamage || enemyDamage) * 0.5;
+                        if(enemy.type === "abyss") frostSlowTimer = 45;
+                    }
+                }
+            }
+        }
+    });
+
+    if(roundBreakActive){
+        updateRoundBreak();
+        return;
+    }
+
+    if(isRoundCleared()){
+        startNextRound();
+    }
+}
+
+function drawPlayer(){
+    const cx = player.x + player.w / 2;
+    const footY = player.y + player.h;
+    const bodyTop = player.y - player.h * 0.20;
+    const bodyH = player.h * 1.08;
+    const baseColor = player.character === "swordHero" ? "#ffd54f" : (player.character === "legendaryCato" ? "#ffca28" : player.color);
+
+    drawShadow(cx, footY + 4, player.w * 0.48, player.h * 0.17, 0.34);
+
+    if(equippedMount === "car"){
+        fillRoundRect(player.x - 18, player.y + player.h * 0.18, player.w + 36, player.h * 0.78, 16, "#455a64");
+        ctx.fillStyle = "#90caf9";
+        ctx.fillRect(player.x + player.w*0.12, player.y + player.h*0.30, player.w*0.76, player.h*0.22);
+        ctx.fillStyle = "#111";
+        ctx.beginPath(); ctx.arc(player.x - 8, footY - 5, 9, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(player.x + player.w + 8, footY - 5, 9, 0, Math.PI*2); ctx.fill();
+    }
+
+    if(player.character === "legendaryCato"){
+        ctx.fillStyle = "#f6c343";
+        ctx.beginPath();
+        ctx.ellipse(cx, player.y + player.h*0.47, player.w*0.46, player.h*0.50, 0, 0, Math.PI*2);
+        ctx.fill();
+        ctx.fillStyle = "#ffdf75";
+        ctx.beginPath();
+        ctx.moveTo(player.x + player.w*0.24, player.y + player.h*0.10);
+        ctx.lineTo(player.x + player.w*0.36, player.y - player.h*0.08);
+        ctx.lineTo(player.x + player.w*0.47, player.y + player.h*0.12);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(player.x + player.w*0.55, player.y + player.h*0.12);
+        ctx.lineTo(player.x + player.w*0.68, player.y - player.h*0.08);
+        ctx.lineTo(player.x + player.w*0.79, player.y + player.h*0.13);
+        ctx.fill();
+        ctx.fillStyle = "#111";
+        ctx.fillRect(player.x + player.w*0.32, player.y + player.h*0.35, 6, 6);
+        ctx.fillRect(player.x + player.w*0.62, player.y + player.h*0.35, 6, 6);
+    }else{
+        fillRoundRect(player.x + player.w*0.11, bodyTop + player.h*0.25, player.w*0.78, bodyH*0.68, player.w*0.18, baseColor);
+        ctx.fillStyle = "rgba(255,255,255,0.18)";
+        ctx.fillRect(player.x + player.w*0.23, bodyTop + player.h*0.34, player.w*0.18, bodyH*0.46);
+        ctx.fillStyle = "#f2c08b";
+        ctx.beginPath();
+        ctx.ellipse(cx, bodyTop + player.h*0.23, player.w*0.30, player.h*0.25, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#111";
+        ctx.fillRect(cx - player.w*0.13, bodyTop + player.h*0.18, 5, 5);
+        ctx.fillRect(cx + player.w*0.09, bodyTop + player.h*0.18, 5, 5);
+    }
+
+    // Indicador de dirección.
+    ctx.fillStyle = "rgba(255,255,255,0.92)";
+    ctx.font = Math.max(16, player.w*0.34) + "px Arial Black";
+    const dirSymbol = player.direction === "right" ? "›" : player.direction === "left" ? "‹" : player.direction === "up" ? "⌃" : "⌄";
+    ctx.fillText(dirSymbol, cx - 6, footY - 6);
+
+    // Armas y marcas de personaje.
+    if(player.character === "archer"){
+        ctx.strokeStyle = "#8d5524";
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.arc(cx + player.w*0.22, player.y + player.h*0.42, player.w*0.32, -Math.PI/2, Math.PI/2);
+        ctx.stroke();
+    }
+
+    if(player.character === "lancer"){
+        ctx.strokeStyle = "#d7dde4";
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        if(player.direction === "right"){ ctx.moveTo(cx, player.y + player.h*0.42); ctx.lineTo(player.x + player.w + 55, player.y + player.h*0.38); }
+        else if(player.direction === "left"){ ctx.moveTo(cx, player.y + player.h*0.42); ctx.lineTo(player.x - 55, player.y + player.h*0.38); }
+        else if(player.direction === "up"){ ctx.moveTo(cx, player.y + player.h*0.42); ctx.lineTo(cx, player.y - 55); }
+        else { ctx.moveTo(cx, player.y + player.h*0.42); ctx.lineTo(cx, player.y + player.h + 55); }
+        ctx.stroke();
+    }
+
+    if(player.character === "gladiator"){
+        fillRoundRect(player.x - 18, player.y + player.h*0.22, 18, player.h*0.48, 7, player.blocking ? "#4fc3f7" : "#8d8d8d");
+        ctx.strokeStyle = "#fdd835";
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.moveTo(player.x + player.w*0.78, player.y + player.h*0.20);
+        ctx.lineTo(player.x + player.w*0.95, player.y + player.h*0.85);
+        ctx.stroke();
+    }
+
+    if(player.character === "berserker"){
+        ctx.strokeStyle = "#ff9800";
+        ctx.lineWidth = 7;
+        ctx.beginPath();
+        ctx.moveTo(player.x + player.w*0.76, player.y + player.h*0.22);
+        ctx.lineTo(player.x + player.w*0.93, player.y + player.h*0.83);
+        ctx.stroke();
+        ctx.fillStyle = "#9e9e9e";
+        ctx.fillRect(player.x + player.w*0.76, player.y + player.h*0.15, 26, 11);
+    }
+
+    if(player.character === "mage"){
+        ctx.strokeStyle = "#80deea";
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.moveTo(cx + player.w*0.25, player.y + player.h*0.18);
+        ctx.lineTo(cx + player.w*0.25, footY);
+        ctx.stroke();
+        ctx.fillStyle = "cyan";
+        ctx.beginPath(); ctx.arc(cx + player.w*0.25, player.y + player.h*0.15, 8, 0, Math.PI*2); ctx.fill();
+    }
+
+    if(player.character === "swordHero"){
+        ctx.strokeStyle = "#fff176";
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.moveTo(player.x + player.w*0.82, player.y + player.h*0.02);
+        ctx.lineTo(player.x + player.w*1.02, player.y + player.h*0.82);
+        ctx.stroke();
+        ctx.strokeStyle = "rgba(0,255,255,0.7)";
+        ctx.lineWidth = 3;
+        ctx.strokeRect(player.x + 5, player.y + 4, player.w - 10, player.h - 8);
+    }
+
+    if(equippedAttackEffect === "orange"){
+        ctx.strokeStyle = "orange";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.ellipse(cx, footY - player.h*0.25, player.w*0.75, player.h*0.56, 0, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+
+    if(player.attacking && (player.character === "sword" || player.character === "swordHero")){
+        let sword = getSwordBox();
+        ctx.fillStyle = player.character === "swordHero" ? "rgba(255,235,59,0.78)" : "rgba(255,230,0,0.70)";
+        ctx.fillRect(sword.x,sword.y,sword.w,sword.h);
+        ctx.strokeStyle = "white";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(sword.x,sword.y,sword.w,sword.h);
+    }
+
+    if(chargingArrow && player.character === "archer"){
+        let chargePercent = arrowCharge / maxArrowCharge;
+        ctx.strokeStyle = "gold";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(cx, player.y + player.h/2, 8 + chargePercent * 22, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+
+    if(chargingAxe && player.character === "berserker"){
+        let chargePercent = axeCharge / maxAxeCharge;
+        ctx.strokeStyle = "orange";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(cx, player.y + player.h/2, 20 + chargePercent * 45, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+
+    if(chargingMagic && player.character === "mage"){
+        let chargePercent = magicCharge / maxMagicCharge;
+        ctx.strokeStyle = "cyan";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(cx, player.y + player.h/2, 12 + chargePercent * 50, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+
+    if(chargingSpear && player.character === "lancer"){
+        let chargePercent = spearCharge / maxSpearCharge;
+        ctx.strokeStyle = "silver";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(cx, player.y + player.h/2, 12 + chargePercent * 35, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+
+    if(chargingGladiatorSword && player.character === "gladiator"){
+        let chargePercent = gladiatorSwordCharge / maxGladiatorSwordCharge;
+        ctx.strokeStyle = chargePercent >= 0.7 ? "red" : "yellow";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(cx, player.y + player.h/2, 12 + chargePercent * 40, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+}
+
+function drawCat(){
+    if(cat === null) return;
+
+    const cx = cat.x + cat.w / 2;
+    const footY = cat.y + cat.h;
+    const isLion = cat.type === "lion";
+    drawShadow(cx, footY + 3, cat.w * 0.45, cat.h * 0.16, 0.26);
+
+    ctx.fillStyle = isLion ? "#d88b22" : "#f7f7f7";
+    ctx.beginPath();
+    ctx.ellipse(cx, cat.y + cat.h*0.50, cat.w*0.48, cat.h*0.38, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    if(isLion){
+        ctx.fillStyle = "#8d4a14";
+        ctx.beginPath();
+        ctx.ellipse(cx, cat.y + cat.h*0.32, cat.w*0.55, cat.h*0.45, 0, 0, Math.PI*2);
+        ctx.fill();
+        ctx.fillStyle = "#e6a23a";
+    }else{
+        ctx.fillStyle = "#ffffff";
+    }
+
+    ctx.beginPath();
+    ctx.ellipse(cx, cat.y + cat.h*0.34, cat.w*0.36, cat.h*0.30, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = "#111";
+    ctx.fillRect(cx - 8, cat.y + cat.h*0.28, 4, 4);
+    ctx.fillRect(cx + 5, cat.y + cat.h*0.28, 4, 4);
+    ctx.fillStyle = "#ff9acb";
+    ctx.fillRect(cx - 2, cat.y + cat.h*0.38, 4, 4);
+
+    ctx.fillStyle = "rgba(255,255,255,0.88)";
+    ctx.font = "12px Arial Black";
+    ctx.fillText(isLion ? "LEÓN" : "CAT", cat.x - 2, cat.y - 8);
+}
+
+function getEnemyVisual(enemy){
+    if(enemy && enemy.isBoss){
+        return {color:"#6a1b9a", label:"JEFE", bar:"gold"};
+    }
+
+    let definition = getSpecialEnemyByType(enemy.type);
+
+    if(definition){
+        return {
+            color:definition.color,
+            label:definition.label,
+            bar:definition.color
+        };
+    }
+
+    if(enemy.type === "archer"){
+        return {color:"purple", label:"AR", bar:"red"};
+    }
+
+    return {color:"red", label:"", bar:"red"};
+}
+
+function drawEnemy(enemy){
+    let visual = getEnemyVisual(enemy);
+    const cx = enemy.x + enemy.w / 2;
+    const footY = enemy.y + enemy.h;
+    const bodyTop = enemy.y - enemy.h * 0.15;
+    const bodyH = enemy.h * 1.06;
+
+    drawShadow(cx, footY + 4, enemy.w * 0.48, enemy.h * 0.17, enemy.isBoss ? 0.45 : 0.32);
+
+    fillRoundRect(enemy.x + enemy.w*0.08, bodyTop + enemy.h*0.18, enemy.w*0.84, bodyH*0.76, enemy.w*0.16, visual.color);
+
+    ctx.fillStyle = "rgba(255,255,255,0.16)";
+    ctx.fillRect(enemy.x + enemy.w*0.22, bodyTop + enemy.h*0.28, enemy.w*0.15, bodyH*0.48);
+
+    if(enemy.isBoss){
+        strokeRoundRect(enemy.x + enemy.w*0.04, bodyTop + enemy.h*0.12, enemy.w*0.92, bodyH*0.84, enemy.w*0.16, "gold", 4);
+        ctx.fillStyle = "gold";
+        ctx.font = "16px Arial Black";
+        ctx.fillText(enemy.name || "JEFE", enemy.x, bodyTop - 22);
+    }
+
+    if(enemy.specialTier && !enemy.isBoss){
+        strokeRoundRect(enemy.x + enemy.w*0.07, bodyTop + enemy.h*0.16, enemy.w*0.86, bodyH*0.78, enemy.w*0.15, "rgba(255,255,255,0.85)", 3);
+        ctx.fillStyle = "white";
+        ctx.font = "13px Arial Black";
+        ctx.fillText(visual.label, enemy.x + 4, bodyTop - 6);
+    }
+
+    if(enemy.poisonTimer > 0){
+        ctx.fillStyle = "rgba(0,255,0,0.35)";
+        ctx.beginPath();
+        ctx.ellipse(cx, enemy.y + enemy.h*0.48, enemy.w*0.55, enemy.h*0.48, 0, 0, Math.PI*2);
+        ctx.fill();
+    }
+
+    ctx.fillStyle = "#111";
+    ctx.fillRect(cx - enemy.w*0.15, bodyTop + enemy.h*0.31, 6, 6);
+    ctx.fillRect(cx + enemy.w*0.10, bodyTop + enemy.h*0.31, 6, 6);
+
+    if(enemy.type === "archer" && !enemy.specialTier){
+        ctx.strokeStyle = "#d7b56d";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(cx + enemy.w*0.17, enemy.y + enemy.h*0.50, enemy.w*0.28, -Math.PI/2, Math.PI/2);
+        ctx.stroke();
+    }
+
+    if(enemy.isBoss){
+        ctx.fillStyle = "white";
+        ctx.font = "14px Arial Black";
+        ctx.fillText("JEFE " + enemy.bossTier, enemy.x + enemy.w*0.18, enemy.y + enemy.h*0.55);
+    }
+
+    let maxHp = enemy.maxHp || enemy.hp || 1;
+    let barWidth = enemy.isBoss ? Math.min(260, enemy.w * 1.75) : enemy.w * 1.05;
+    let barX = cx - barWidth / 2;
+    let barY = bodyTop - (enemy.isBoss ? 16 : 12);
+
+    fillRoundRect(barX, barY, barWidth, enemy.isBoss ? 10 : 7, 4, "#2b0505");
+    fillRoundRect(barX, barY, barWidth * Math.max(0, enemy.hp / maxHp), enemy.isBoss ? 10 : 7, 4, enemy.isBoss ? "gold" : visual.bar);
+}
+
+function drawArrows(){
+    arrows.forEach(arrow=>{
+        ctx.fillStyle = "gold";
+        ctx.fillRect(arrow.x, arrow.y, arrow.w, arrow.h);
+    });
+}
+
+function drawSpears(){
+    thrownSpears.forEach(spear=>{
+        ctx.fillStyle = "silver";
+        ctx.fillRect(spear.x, spear.y, spear.w, spear.h);
+
+        ctx.strokeStyle = "white";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(spear.x, spear.y, spear.w, spear.h);
+    });
+
+    if(spearMeleeEffect){
+        ctx.fillStyle = "rgba(192,192,192,0.35)";
+        ctx.fillRect(spearMeleeEffect.x, spearMeleeEffect.y, spearMeleeEffect.w, spearMeleeEffect.h);
+
+        ctx.strokeStyle = "white";
+        ctx.lineWidth = 3;
+        ctx.strokeRect(spearMeleeEffect.x, spearMeleeEffect.y, spearMeleeEffect.w, spearMeleeEffect.h);
+    }
+}
+
+function drawLightning(){
+    lightningBolts.forEach(bolt=>{
+        ctx.fillStyle = bolt.pierce ? "rgba(0,255,255,0.9)" : "cyan";
+        ctx.fillRect(bolt.x, bolt.y, bolt.w, bolt.h);
+
+        ctx.strokeStyle = "white";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(bolt.x, bolt.y, bolt.w, bolt.h);
+    });
+
+    if(magicEffectTimer > 0){
+        ctx.strokeStyle = "cyan";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(player.x + player.w/2, player.y + player.h/2, 45, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+}
+
+function drawEnemyArrows(){
+    enemyArrows.forEach(arrow=>{
+        if(arrow.ownerType === "boss") ctx.fillStyle = "red";
+        else if(arrow.effect === "slow") ctx.fillStyle = "#4dd0e1";
+        else if(arrow.effect === "poison") ctx.fillStyle = "#76ff03";
+        else if(arrow.effect === "light") ctx.fillStyle = "#fff176";
+        else if(arrow.effect === "abyss") ctx.fillStyle = "#ff00aa";
+        else ctx.fillStyle = "violet";
+        ctx.fillRect(arrow.x, arrow.y, arrow.w, arrow.h);
+    });
+}
+
+function drawEnemyAreaAttacks(){
+    enemyAreaAttacks.forEach(area=>{
+        let alpha = Math.max(0.12, area.life / Math.max(1, area.maxLife));
+
+        ctx.save();
+        ctx.globalAlpha = Math.min(0.75, alpha + 0.15);
+        ctx.fillStyle = area.color;
+        ctx.strokeStyle = area.stroke;
+        ctx.lineWidth = 3;
+
+        if(area.shape === "rect"){
+            ctx.fillRect(area.x, area.y, area.w, area.h);
+            ctx.strokeRect(area.x, area.y, area.w, area.h);
+
+            if(area.label){
+                ctx.fillStyle = "white";
+                ctx.font = "13px Arial";
+                ctx.fillText(area.label, area.x + 8, area.y + 20);
+            }
+        }else{
+            ctx.beginPath();
+            ctx.arc(area.x, area.y, area.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            if(area.label){
+                ctx.fillStyle = "white";
+                ctx.font = "13px Arial";
+                ctx.fillText(area.label, area.x - 30, area.y + 4);
+            }
+        }
+
+        ctx.restore();
+    });
+}
+
+function drawGladiatorSwordEffect(){
+    if(!gladiatorSwordEffect) return;
+
+    ctx.fillStyle = gladiatorSwordEffect.charged ? "rgba(255,0,0,0.45)" : "rgba(255,255,0,0.35)";
+    ctx.fillRect(gladiatorSwordEffect.x, gladiatorSwordEffect.y, gladiatorSwordEffect.w, gladiatorSwordEffect.h);
+
+    ctx.strokeStyle = gladiatorSwordEffect.charged ? "red" : "yellow";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(gladiatorSwordEffect.x, gladiatorSwordEffect.y, gladiatorSwordEffect.w, gladiatorSwordEffect.h);
+}
+
+function drawAxeEffect(){
+    if(!axeEffect) return;
+
+    ctx.fillStyle = "rgba(255,140,0,0.35)";
+    ctx.fillRect(axeEffect.x, axeEffect.y, axeEffect.w, axeEffect.h);
+
+    ctx.strokeStyle = "orange";
+    ctx.lineWidth = 4;
+    ctx.strokeRect(axeEffect.x, axeEffect.y, axeEffect.w, axeEffect.h);
+}
+
+function getCurrentMap(){
+    const maps = [
+        {name:"Bosque Oscuro", sky:"#1a1a1a", ground:"#2e7d32", detail:"#66bb6a", type:"forest"},
+        {name:"Volcán de Lava", sky:"#2b0b0b", ground:"#5d1a00", detail:"#ff5722", type:"volcano"},
+        {name:"Reino Helado", sky:"#10243d", ground:"#b3e5fc", detail:"#e1f5fe", type:"ice"},
+        {name:"Desierto Dorado", sky:"#3b2a10", ground:"#c28f2c", detail:"#ffd166", type:"desert"},
+        {name:"Pantano Venenoso", sky:"#102015", ground:"#31572c", detail:"#80b918", type:"swamp"},
+        {name:"Ciudad Sombría", sky:"#111827", ground:"#374151", detail:"#9ca3af", type:"city"},
+        {name:"Templo Celestial", sky:"#1e1b4b", ground:"#6d28d9", detail:"#c4b5fd", type:"temple"},
+        {name:"Abismo Final", sky:"#08000f", ground:"#2d0036", detail:"#ff00aa", type:"abyss"}
+    ];
+
+    let mapIndex = Math.floor(round / 10);
+    if(mapIndex >= maps.length) mapIndex = maps.length - 1;
+    return maps[mapIndex];
+}
+
+function drawMap(){
+    rebuildWorldDecorations();
+    let map = getCurrentMap();
+    const worldW = getWorldWidth();
+    const worldH = getWorldHeight();
+
+    // Fondo base del mundo completo.
+    ctx.fillStyle = map.ground;
+    ctx.fillRect(0, 0, worldW, worldH);
+
+    // Degradado suave de luz para dar sensación 2.5D.
+    const gradient = ctx.createLinearGradient(0, 0, 0, worldH);
+    gradient.addColorStop(0, "rgba(255,255,255,0.10)");
+    gradient.addColorStop(0.45, "rgba(255,255,255,0.02)");
+    gradient.addColorStop(1, "rgba(0,0,0,0.18)");
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, worldW, worldH);
+
+    // Cuadrícula diagonal muy sutil tipo suelo de RPG visto desde arriba-lateral.
+    const tile = 96;
+    const startX = Math.floor(camera.x / tile) * tile - tile * 2;
+    const endX = Math.min(worldW + tile, camera.x + canvas.width + tile * 2);
+    const startY = Math.floor(camera.y / tile) * tile - tile * 2;
+    const endY = Math.min(worldH + tile, camera.y + canvas.height + tile * 2);
+
+    ctx.strokeStyle = "rgba(255,255,255,0.055)";
+    ctx.lineWidth = 1;
+    for(let x=startX; x<endX; x+=tile){
+        ctx.beginPath();
+        ctx.moveTo(x, startY);
+        ctx.lineTo(x + (endY-startY) * 0.35, endY);
+        ctx.stroke();
+    }
+    for(let y=startY; y<endY; y+=tile){
+        ctx.beginPath();
+        ctx.moveTo(startX, y);
+        ctx.lineTo(endX, y + (endX-startX) * 0.18);
+        ctx.stroke();
+    }
+
+    // Detalles bajos del suelo por mapa. Los objetos altos se dibujan después con Y-sorting.
+    ctx.fillStyle = map.detail;
+    ctx.globalAlpha = 0.28;
+
+    if(map.type === "forest"){
+        for(let i=0;i<90;i++){
+            const x = seededRandom(i*17 + 3) * worldW;
+            const y = seededRandom(i*29 + 7) * worldH;
+            ctx.beginPath();
+            ctx.ellipse(x, y, 18, 8, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }else if(map.type === "volcano"){
+        for(let i=0;i<55;i++){
+            const x = seededRandom(i*21 + 5) * worldW;
+            const y = seededRandom(i*37 + 11) * worldH;
+            ctx.beginPath();
+            ctx.arc(x, y, 10 + seededRandom(i*9)*18, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }else if(map.type === "ice"){
+        for(let i=0;i<70;i++){
+            const x = seededRandom(i*13 + 15) * worldW;
+            const y = seededRandom(i*31 + 19) * worldH;
+            ctx.fillRect(x, y, 52, 5);
+        }
+    }else if(map.type === "desert"){
+        for(let i=0;i<45;i++){
+            const x = seededRandom(i*18 + 2) * worldW;
+            const y = seededRandom(i*34 + 8) * worldH;
+            ctx.beginPath();
+            ctx.arc(x, y, 70, Math.PI, 0);
+            ctx.fill();
+        }
+    }else if(map.type === "swamp"){
+        for(let i=0;i<65;i++){
+            const x = seededRandom(i*23 + 12) * worldW;
+            const y = seededRandom(i*39 + 1) * worldH;
+            ctx.beginPath();
+            ctx.ellipse(x, y, 42, 15, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }else{
+        for(let i=0;i<70;i++){
+            const x = seededRandom(i*27 + 14) * worldW;
+            const y = seededRandom(i*41 + 18) * worldH;
+            ctx.fillRect(x, y, 44, 12);
+        }
+    }
+
+    ctx.globalAlpha = 1;
+
+    // Borde del mundo para que se sienta como mapa grande.
+    ctx.strokeStyle = "rgba(255,255,255,0.18)";
+    ctx.lineWidth = 10;
+    ctx.strokeRect(5, 5, worldW - 10, worldH - 10);
+}
+
+
+function drawDecoration(decor){
+    const x = decor.x;
+    const y = decor.y;
+    const s = decor.size || 1;
+
+    drawShadow(x, y + 8*s, 24*s, 9*s, 0.26);
+
+    if(decor.type === "tree" || decor.type === "pineSnow" || decor.type === "swampTree"){
+        const trunk = decor.type === "pineSnow" ? "#6d4c41" : "#5d3a1a";
+        const leaf = decor.type === "pineSnow" ? "#d9f7ff" : (decor.type === "swampTree" ? "#31572c" : "#2f7d32");
+        ctx.fillStyle = trunk;
+        ctx.fillRect(x - 7*s, y - 45*s, 14*s, 45*s);
+        ctx.fillStyle = leaf;
+        ctx.beginPath();
+        ctx.ellipse(x, y - 62*s, 34*s, 38*s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "rgba(255,255,255,0.13)";
+        ctx.beginPath();
+        ctx.ellipse(x - 11*s, y - 75*s, 12*s, 10*s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        return;
+    }
+
+    if(decor.type === "cactus"){
+        ctx.fillStyle = "#2d7d46";
+        fillRoundRect(x - 9*s, y - 58*s, 18*s, 58*s, 8*s, "#2d7d46");
+        fillRoundRect(x - 28*s, y - 42*s, 13*s, 35*s, 7*s, "#2d7d46");
+        fillRoundRect(x + 16*s, y - 52*s, 13*s, 36*s, 7*s, "#2d7d46");
+        return;
+    }
+
+    if(decor.type === "pillar" || decor.type === "obelisk" || decor.type === "statue"){
+        const color = decor.type === "obelisk" ? "#42105a" : "#c7b79b";
+        fillRoundRect(x - 16*s, y - 72*s, 32*s, 72*s, 6*s, color);
+        ctx.fillStyle = "rgba(255,255,255,0.16)";
+        ctx.fillRect(x - 10*s, y - 66*s, 6*s, 55*s);
+        ctx.fillStyle = decor.type === "obelisk" ? "#ff00aa" : "#fff0b0";
+        ctx.beginPath();
+        ctx.arc(x, y - 78*s, 10*s, 0, Math.PI * 2);
+        ctx.fill();
+        return;
+    }
+
+    if(decor.type === "house" || decor.type === "ruin"){
+        fillRoundRect(x - 32*s, y - 55*s, 64*s, 55*s, 6*s, decor.type === "ruin" ? "#5b6471" : "#8d5a2b");
+        ctx.fillStyle = decor.type === "ruin" ? "#2f3540" : "#5a2d16";
+        ctx.beginPath();
+        ctx.moveTo(x - 42*s, y - 55*s);
+        ctx.lineTo(x, y - 90*s);
+        ctx.lineTo(x + 42*s, y - 55*s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#1b120b";
+        ctx.fillRect(x - 8*s, y - 27*s, 16*s, 27*s);
+        return;
+    }
+
+    if(decor.type === "mushroom"){
+        ctx.fillStyle = "#f8e6c0";
+        ctx.fillRect(x - 6*s, y - 25*s, 12*s, 25*s);
+        ctx.fillStyle = "#c62828";
+        ctx.beginPath();
+        ctx.ellipse(x, y - 28*s, 24*s, 14*s, 0, Math.PI, 0);
+        ctx.fill();
+        return;
+    }
+
+    if(decor.type === "crystalRed" || decor.type === "crystalPurple" || decor.type === "iceCrystal"){
+        const color = decor.type === "iceCrystal" ? "#b3e5fc" : (decor.type === "crystalPurple" ? "#c084fc" : "#ff7043");
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(x, y - 60*s);
+        ctx.lineTo(x + 18*s, y - 20*s);
+        ctx.lineTo(x + 8*s, y);
+        ctx.lineTo(x - 14*s, y - 4*s);
+        ctx.lineTo(x - 20*s, y - 25*s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = "rgba(255,255,255,0.65)";
+        ctx.lineWidth = 2*s;
+        ctx.stroke();
+        return;
+    }
+
+    if(decor.type === "bush" || decor.type === "desertBush" || decor.type === "snowBush" || decor.type === "reed"){
+        const color = decor.type === "snowBush" ? "#dff8ff" : (decor.type === "desertBush" ? "#8a7a2a" : "#4f9a39");
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.ellipse(x, y - 12*s, 25*s, 16*s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        return;
+    }
+
+    // Rocas, cajas, troncos y objetos bajos.
+    const colorMap = {
+        rock:"#7b7f87", lavaRock:"#3b1a16", sandRock:"#b98b48", voidRock:"#2d0036",
+        stone:"#848b94", crate:"#9a6a35", stump:"#6b3f1d", deadTree:"#6b4a2b", ember:"#ff5722", lamp:"#f5c542"
+    };
+    ctx.fillStyle = colorMap[decor.type] || "#777";
+    ctx.beginPath();
+    ctx.ellipse(x, y - 13*s, 25*s, 18*s, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,0.12)";
+    ctx.beginPath();
+    ctx.ellipse(x - 8*s, y - 21*s, 8*s, 5*s, 0, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+function drawWorldSortedEntities(){
+    const items = [];
+
+    worldDecorations.forEach(decor=>{
+        // Solo dibuja objetos cercanos a la cámara para mejorar rendimiento.
+        if(decor.x > camera.x - 180 && decor.x < camera.x + canvas.width + 180 && decor.y > camera.y - 220 && decor.y < camera.y + canvas.height + 160){
+            items.push({y:decor.depthY, draw:()=>drawDecoration(decor)});
+        }
+    });
+
+    if(cat !== null){
+        items.push({y:cat.y + cat.h, draw:drawCat});
+    }
+
+    if(helicopter){
+        items.push({y:helicopter.y + helicopter.h + 1000, draw:drawHelicopter});
+    }
+
+    if(bossPortal){
+        items.push({y:bossPortal.y + bossPortal.h, draw:drawBossPortal});
+    }
+
+    enemies.forEach(enemy=>{
+        if(enemy.hp > 0){
+            items.push({y:enemy.y + enemy.h, draw:()=>drawEnemy(enemy)});
+        }
+    });
+
+    items.push({y:player.y + player.h, draw:drawPlayer});
+
+    items.sort((a,b)=>a.y - b.y);
+    items.forEach(item=>item.draw());
+}
+
+function drawBigMessage(title, subtitle){
+    ctx.fillStyle = "rgba(0,0,0,0.70)";
+    ctx.fillRect(0, canvas.height / 2 - 85, canvas.width, 170);
+
+    ctx.fillStyle = "gold";
+    ctx.font = "42px Arial";
+    ctx.fillText(title, canvas.width / 2 - 270, canvas.height / 2 - 20);
+
+    ctx.fillStyle = "white";
+    ctx.font = "34px Arial";
+    ctx.fillText(subtitle, canvas.width / 2 - 260, canvas.height / 2 + 35);
+}
+
+
+function drawHelicopter(){
+    if(!helicopter) return;
+
+    ctx.fillStyle = "#263238";
+    ctx.fillRect(helicopter.x, helicopter.y, helicopter.w, helicopter.h);
+
+    ctx.fillStyle = "#90caf9";
+    ctx.fillRect(helicopter.x + 35, helicopter.y + 12, 45, 18);
+
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(helicopter.x + 10, helicopter.y - 8);
+    ctx.lineTo(helicopter.x + helicopter.w - 10, helicopter.y - 8);
+    ctx.stroke();
+
+    ctx.fillStyle = "gold";
+    ctx.font = "14px Arial";
+    ctx.fillText("HELI x4", helicopter.x + 35, helicopter.y + helicopter.h + 18);
+
+    if(helicopterGunEffectTimer > 0){
+        ctx.strokeStyle = "orange";
+        ctx.lineWidth = 2;
+        for(let i=0;i<4;i++){
+            ctx.beginPath();
+            ctx.moveTo(helicopter.x + 20 + i*30, helicopter.y + helicopter.h);
+            ctx.lineTo(helicopter.x + 20 + i*30, canvas.height - 110);
+            ctx.stroke();
+        }
+    }
+}
+
+function getCharacterDisplay(){
+    let name = "Espadachín";
+    let icon = "⚔️";
+
+    if(player.character === "lancer"){
+        name = "Lancero";
+        icon = "🔱";
+    }
+
+    if(player.character === "gladiator"){
+        name = "Gladiador";
+        icon = "🛡️";
+    }
+
+    if(player.character === "archer"){
+        name = "Arquero";
+        icon = "🏹";
+    }
+
+    if(player.character === "berserker"){
+        name = "Berserker";
+        icon = "🪓";
+    }
+
+    if(player.character === "mage"){
+        name = "Mago";
+        icon = "⚡";
+    }
+
+    if(player.character === "swordHero"){
+        name = "Héroe de la Espada";
+        icon = "🦸";
+    }
+
+    if(player.character === "legendaryCato"){
+        name = "Cato Legendario";
+        icon = "🐱";
+    }
+
+    return {name, icon};
+}
+
+function getHudPremiumInfo(){
+    let parts = [];
+
+    if(equippedPremiumWeapon === "dritaniumSword") parts.push("Espada Dritanio");
+    if(equippedPremiumWeapon === "minigun") parts.push("Metralleta");
+    if(equippedAttackEffect === "orange") parts.push("Aura naranja");
+    if(equippedPremiumPet === "lion") parts.push("León");
+    if(equippedMount === "car") parts.push("Coche");
+    if(equippedSupport === "helicopter") parts.push("Helicóptero");
+
+    return parts.length > 0 ? parts.join(" · ") : "Normal";
+}
+
+function updateHudBar(){
+    if(!hudCharacterName) return;
+
+    const character = getCharacterDisplay();
+    hudAvatar.textContent = character.icon;
+    hudCharacterName.textContent = character.name;
+    hudCharacterInfo.textContent = getHudPremiumInfo();
+
+    let hpPercent = 1;
+    if(!isPlayerImmortal()){
+        hpPercent = Math.max(0, Math.min(1, player.hp / Math.max(1, player.maxHp)));
+        hudHpText.textContent = Math.floor(player.hp) + " / " + Math.floor(player.maxHp) + "  ·  Vida +" + upgradeLevels.hp;
+    }else{
+        hudHpText.textContent = "∞ / ∞  ·  Inmortal";
+    }
+    hudHpFill.style.width = (hpPercent * 100) + "%";
+
+    if(hudUpgradeText){
+        let summonText = summonUnlocked ? ("Gato " + summonLevel + "/" + maxSummonLevel + " $" + SHOP_SUMMON_COST) : "Gato 🔒 R10 $" + SHOP_SUMMON_COST;
+        hudUpgradeText.textContent = "F " + upgradeLevels.damage + "/" + maxUpgradeLevel + " $" + SHOP_DAMAGE_COST +
+            " · Vel " + upgradeLevels.speed + "/" + maxUpgradeLevel + " $" + SHOP_SPEED_COST +
+            " · Vida " + upgradeLevels.hp + "/" + maxUpgradeLevel + " $" + SHOP_HP_COST +
+            " · " + summonText;
+    }
+
+    hudMapName.textContent = getCurrentMap().name;
+    if(hudRoundText){
+        if(lastHudRoundForAnimation !== round){
+            if(lastHudRoundForAnimation !== null){
+                hudRoundText.classList.remove("roundChanged");
+                void hudRoundText.offsetWidth;
+                hudRoundText.classList.add("roundChanged");
+            }
+            lastHudRoundForAnimation = round;
+        }
+        hudRoundText.textContent = "RONDA " + round;
+    }
+
+    if(roundBreakActive){
+        const secondsLeft = Math.max(0, Math.ceil(roundBreakTimer / 60));
+        const elapsed = 1 - Math.max(0, Math.min(1, roundBreakTimer / ROUND_BREAK_FRAMES));
+        hudWaveTitle.textContent = "Descanso";
+        hudWaveText.textContent = "Siguiente ronda en " + secondsLeft + "s";
+        hudWaveFill.style.width = (elapsed * 100) + "%";
+    }else if(isBossRound()){
+        const boss = enemies.find(enemy=>enemy.hp > 0 && enemy.isBoss);
+        if(bossPortal && !boss){
+            hudWaveTitle.textContent = "Portal";
+            hudWaveText.textContent = "Entra para avanzar";
+            hudWaveFill.style.width = "100%";
+        }else{
+            const bossHpPercent = boss ? Math.max(0, Math.min(1, boss.hp / Math.max(1, boss.maxHp || boss.hp))) : 1;
+            hudWaveTitle.textContent = "Jefe";
+            hudWaveText.textContent = (currentBossName || getBossName(Math.max(1, getRoundTier()))) + " · " + Math.round(bossHpPercent * 100) + "%";
+            hudWaveFill.style.width = (bossHpPercent * 100) + "%";
+        }
+    }else{
+        const defeated = Math.max(0, roundEnemiesSpawned - countAliveNonBossEnemies());
+        const progress = roundEnemyTotal > 0 ? Math.max(0, Math.min(1, defeated / roundEnemyTotal)) : 0;
+        const waveSize = Math.max(1, getWaveSpawnSize());
+        const currentWave = Math.max(1, Math.ceil(Math.max(1, roundEnemiesSpawned) / waveSize));
+        const totalWaves = Math.max(1, Math.ceil(roundEnemyTotal / waveSize));
+        hudWaveTitle.textContent = "Oleada";
+        hudWaveText.textContent = "Oleada " + currentWave + "/" + totalWaves;
+        hudWaveFill.style.width = (progress * 100) + "%";
+    }
+
+    if(hudMessageText){
+        if(bossPortalMessageTimer > 0 && bossPortal){
+            hudMessageText.textContent = "✨ Jefe derrotado: entra al PORTAL para ir al siguiente mapa";
+            hudMessageText.classList.add("active");
+        }else if(catTutorialMessageTimer > 0){
+            hudMessageText.textContent = "Ronda 10: Q invoca gato · 4 mejora gato";
+            hudMessageText.classList.add("active");
+        }else if(roundBreakActive){
+            const catTip = summonUnlocked ? (" · 4 Gato $" + SHOP_SUMMON_COST) : " · 4 Gato $" + SHOP_SUMMON_COST + " en R10";
+            hudMessageText.textContent = "Descanso: 1 Fuerza $" + SHOP_DAMAGE_COST + " · 2 Velocidad $" + SHOP_SPEED_COST + " · 3 Vida $" + SHOP_HP_COST + catTip;
+            hudMessageText.classList.add("active");
+        }else if(waveMessageTimer > 0){
+            hudMessageText.textContent = "⚔ NUEVA OLEADA";
+            hudMessageText.classList.add("active");
+        }else{
+            hudMessageText.textContent = "";
+            hudMessageText.classList.remove("active");
+        }
+    }
+
+    hudCoinsText.textContent = coins;
+}
+
+function drawHud(){
+    updateHudBar();
+}
+
+function drawChargeBar(label, value, maxValue, color, y){
+    const x = 20;
+    ctx.fillStyle = color;
+    ctx.font = "18px Arial";
+    ctx.fillText(label + ": " + value + "%", x, y + 10);
+    ctx.fillStyle = "gray";
+    ctx.fillRect(x, y + 20, 150, 12);
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y + 20, 150 * (value / maxValue), 12);
+}
+
+function draw(){
+    updateCamera();
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    ctx.save();
+    ctx.translate(-camera.x, -camera.y);
+
+    drawMap();
+    drawArrows();
+    drawSpears();
+    drawLightning();
+    drawEnemyArrows();
+    drawEnemyAreaAttacks();
+    drawAxeEffect();
+    drawGladiatorSwordEffect();
+    drawWorldSortedEntities();
+
+    ctx.restore();
+
+    drawHud();
+
+    if(gamePaused && !infoOpen){
+        ctx.fillStyle = "rgba(0,0,0,0.4)";
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+
+        ctx.fillStyle = "white";
+        ctx.font = "50px Arial";
+        ctx.fillText("PAUSA",canvas.width/2 - 80,canvas.height/2);
+    }
+
+    if(player.hp <= 0){
+        ctx.fillStyle = "red";
+        ctx.font = "70px Arial";
+        ctx.fillText("GAME OVER",canvas.width/2 - 200,canvas.height/2);
+
+        ctx.font = "34px Arial";
+        ctx.fillText("Reiniciando juego...",canvas.width/2 - 180,canvas.height/2 + 70);
+    }
+}
+
+function updateInfoText(){
+    document.getElementById("infoDamage").innerText = upgrades.damage;
+    document.getElementById("infoSpeed").innerText = upgrades.speed;
+    document.getElementById("infoHp").innerText = upgrades.maxHp;
+
+    document.getElementById("infoDamageLevel").innerText = upgradeLevels.damage;
+    document.getElementById("infoSpeedLevel").innerText = upgradeLevels.speed;
+    document.getElementById("infoHpLevel").innerText = upgradeLevels.hp;
+
+    document.getElementById("infoMaxLevel1").innerText = maxUpgradeLevel;
+    document.getElementById("infoMaxLevel2").innerText = maxUpgradeLevel;
+    document.getElementById("infoMaxLevel3").innerText = maxUpgradeLevel;
+
+    document.getElementById("infoSummonLevel").innerText = summonLevel;
+    document.getElementById("infoSummonMax").innerText = maxSummonLevel;
+}
+
+function loop(){
+    if(gameStarted){
+        if(player.hp > 0){
+            update();
+        }else{
+            if(!gameOverHandled){
+                gameOverHandled = true;
+
+                setTimeout(()=>{
+                    resetGame();
+                },2000);
+            }
+        }
+
+        draw();
+    }
+
+    requestAnimationFrame(loop);
+}
+
+loop();
