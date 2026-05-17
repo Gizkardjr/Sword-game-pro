@@ -197,6 +197,20 @@ body{
     min-width:160px;
 }
 
+.hudUpgrades{
+    flex:1.05;
+    min-width:230px;
+}
+
+#hudUpgradeText{
+    color:#fef08a;
+    font-size:15px;
+    font-weight:900;
+    line-height:1.15;
+    white-space:normal;
+}
+
+
 .hudWave{
     flex:1.55;
     min-width:310px;
@@ -242,15 +256,15 @@ body{
 }
 
 #hudMessageText{
-    min-height:28px;
+    min-height:34px;
     display:flex;
     align-items:center;
     justify-content:center;
     text-align:center;
     color:#fef08a;
-    font-size:20px;
+    font-size:18px;
     font-weight:900;
-    line-height:1.1;
+    line-height:1.12;
     animation:none;
 }
 
@@ -338,6 +352,7 @@ body{
     #hudCharacterBlock,
     .hudStat,
     .hudMap,
+    .hudUpgrades,
     .hudWave,
     .hudMessage{
         flex:1 1 calc(33.333% - 10px);
@@ -358,6 +373,7 @@ body{
     #hudCharacterBlock,
     .hudStat,
     .hudMap,
+    .hudUpgrades,
     .hudWave,
     .hudMessage,
     .hudCoinBox{
@@ -433,6 +449,40 @@ h1{
 #customizeBtn{ background:cyan; }
 #shopBtn{ background:#ffd54f; }
 #premiumShopBtn{ background:#ab47bc; color:white; }
+
+#menuTutorial{
+    width:min(620px,92vw);
+    margin:8px auto 18px auto;
+    padding:14px 18px;
+    border:3px solid #38bdf8;
+    border-radius:18px;
+    background:linear-gradient(180deg,rgba(13,24,45,0.96),rgba(7,12,25,0.96));
+    color:#ecfeff;
+    font-weight:900;
+    font-size:clamp(17px,2.4vw,25px);
+    box-shadow:0 0 18px rgba(56,189,248,0.48), inset 0 0 0 2px rgba(255,255,255,0.08);
+    text-shadow:2px 2px 0 rgba(0,0,0,0.8);
+}
+
+#menuTutorial .tutorialArrow{
+    color:#fef08a;
+    font-size:38px;
+    line-height:1;
+    animation:tutorialArrowBounce 0.85s ease-in-out infinite alternate;
+}
+
+#menuTutorial .tutorialControls{
+    margin-top:8px;
+    color:#d8b4fe;
+    font-size:clamp(14px,1.8vw,18px);
+    line-height:1.35;
+}
+
+@keyframes tutorialArrowBounce{
+    from{ transform:translateY(4px); filter:brightness(1); }
+    to{ transform:translateY(-8px); filter:brightness(1.45); }
+}
+
 
 .gemBtn{
     background:#9c27b0;
@@ -624,6 +674,12 @@ h1{
         <h1>⚔️ SWORD GAME PRO ⚔️</h1>
 
         <button class="menuBtn" id="playBtn">▶ JUGAR</button>
+
+        <div id="menuTutorial">
+            <div class="tutorialArrow">⬆</div>
+            <div>Presiona <b>JUGAR</b> para empezar</div>
+            <div class="tutorialControls">WASD = moverte · ESPACIO = atacar · P = pausa · I = información</div>
+        </div>
         <button class="menuBtn" id="settingsBtn">⚙ AJUSTES</button>
         <button class="menuBtn" id="customizeBtn">🎨 PERSONALIZAR</button>
         <button class="menuBtn" id="shopBtn">🛒 TIENDA</button>
@@ -832,6 +888,11 @@ h1{
             <div class="progressOuter"><div class="progressInner" id="hudHpFill"></div></div>
         </div>
 
+        <div class="hudPanel hudUpgrades">
+            <div class="hudLabel">Mejoras</div>
+            <div class="hudSmallText" id="hudUpgradeText">F 0/10 $10 · V 0/10 $10 · Vida 0/10 $20 · Gato R10 $15</div>
+        </div>
+
         <div class="hudPanel hudMap">
             <div class="hudLabel">Mapa</div>
             <div class="hudMainText" id="hudMapName">Bosque Oscuro</div>
@@ -889,21 +950,6 @@ h1{
 
         <hr>
 
-        <p><b>Tienda Premium:</b></p>
-        <p>Por ahora los objetos premium se compran gratis para probarlos, pero cada tarjeta muestra su precio final en Gemas de Dritanio.</p>
-        <p>Después de comprarlos puedes equiparlos en Personalizar.</p>
-        <p>Espada de Dritanio: doble daño, área y veneno.</p>
-        <p>Efecto naranja: x1.5 daño.</p>
-        <p>Despertar del león: mascota más poderosa que el gato.</p>
-        <p>Héroe de la Espada: mucha vida, velocidad y daño; E lanza rayo.</p>
-        <p>Cato el Gato Legendario: inmortal, daño infinito y ataque de todo el mapa.</p>
-        <p>Coche: 2500 vida, velocidad alta y atropello.</p>
-        <p>Metralleta: dispara rápido con ESPACIO.</p>
-        <p>Helicóptero: se invoca una vez por ronda con H y dispara con 4 metralletas.</p>
-        <p>Pase de batalla: recompensa diaria de prueba de 25 gemas.</p>
-
-        <hr>
-
         <p><b>Desbloqueo de personajes:</b></p>
         <p>Espadachín = disponible desde el inicio.</p>
         <p>Arquero = se desbloquea en ronda 5 y queda guardado.</p>
@@ -927,15 +973,9 @@ h1{
         <p><b>Jefes cada 10 rondas:</b></p>
         <p>En las rondas 10, 20, 30, 40 y más aparece un jefe.</p>
         <p>Al derrotar al jefe ganas x2 daño, x2 vida, x2 velocidad y más tamaño.</p>
-        <p>Cada jefe nuevo es más poderoso que el anterior.</p>
+        <p>Cuando derrotes al jefe aparecerá un portal. Entra al portal para avanzar al siguiente mapa.</p>
+        <p>Cada jefe de cada 10 rondas será más fuerte que el anterior, pero ahora están mejor balanceados.</p>
         <p>También aumentan los límites máximos de mejoras e invocación.</p>
-
-        <hr>
-
-        <p><b>Nuevo enemigo desde ronda 20:</b></p>
-        <p>Guardián de Hielo = enemigo azul más resistente.</p>
-        <p>Persigue al jugador, dispara proyectiles de hielo y puede ralentizarte si te toca.</p>
-        <p>En la ronda 20 aparece junto al jefe como apoyo, y después puede salir en las demás rondas.</p>
 
         <hr>
 
@@ -947,19 +987,6 @@ h1{
         <p>Ronda 50 = Asesino Sombrío.</p>
         <p>Ronda 60 = Centinela Celestial.</p>
         <p>Ronda 70 = Demonio del Abismo.</p>
-
-        <hr>
-
-        <p><b>Ataques especiales enemigos:</b></p>
-        <p>Enemigo normal = embestida rápida.</p>
-        <p>Arquero Oscuro = triple flecha oscura.</p>
-        <p>Guardián de Hielo = prisión de hielo que ralentiza.</p>
-        <p>Coloso de Arena = terremoto de área.</p>
-        <p>Brujo del Pantano = nube venenosa.</p>
-        <p>Asesino Sombrío = teletransporte y corte cercano.</p>
-        <p>Centinela Celestial = rayo de luz en cruz.</p>
-        <p>Demonio del Abismo = vórtice que atrae y daña.</p>
-        <p>Jefes = explosión radial de proyectiles.</p>
 
         <hr>
 
@@ -1017,6 +1044,7 @@ const hudCharacterName = document.getElementById("hudCharacterName");
 const hudCharacterInfo = document.getElementById("hudCharacterInfo");
 const hudHpText = document.getElementById("hudHpText");
 const hudHpFill = document.getElementById("hudHpFill");
+const hudUpgradeText = document.getElementById("hudUpgradeText");
 const hudMapName = document.getElementById("hudMapName");
 const hudRoundText = document.getElementById("hudRoundText");
 const hudWaveTitle = document.getElementById("hudWaveTitle");
@@ -1336,6 +1364,11 @@ let helicopterGunEffectTimer = 0;
 
 let round = 1;
 let roundCoinMessageTimer = 0;
+const ROUND_BREAK_SECONDS = 10;
+const ROUND_BREAK_FRAMES = ROUND_BREAK_SECONDS * 60;
+let roundBreakActive = false;
+let roundBreakTimer = 0;
+let catTutorialMessageTimer = 0;
 
 // Sistema de oleadas controladas:
 // La ronda puede tener muchos enemigos en total, pero solo pocos vivos al mismo tiempo.
@@ -1391,6 +1424,8 @@ let maxSummonLevel = 15;
 let bossBattleMessageTimer = 0;
 let bossRewardMessageTimer = 0;
 let currentBossName = "";
+let bossPortal = null;
+let bossPortalMessageTimer = 0;
 let frostEnemyMessageTimer = 0;
 let frostEnemyAnnounced = false;
 let frostSlowTimer = 0;
@@ -1403,7 +1438,7 @@ let enemySpecialAttackMessageTimer = 0;
 let currentEnemySpecialAttackText = "";
 
 const SPECIAL_ENEMIES = [
-    {tier:1, unlockRound:10, type:"archer", name:"Arquero Oscuro", label:"ARQ", color:"purple", hpBase:55, hpPerRound:11, size:50, speedBase:0.55, speedPerRound:0.045, contactMultiplier:0.7, projectileDamageBase:6, projectileDamagePerRound:0.55, projectileSpeed:5.2, projectileSize:12, shootCooldown:115, behavior:"ranged", effect:"none"},
+    {tier:1, unlockRound:10, type:"archer", name:"Arquero Oscuro", label:"ARQ", color:"purple", hpBase:40, hpPerRound:7, size:48, speedBase:0.42, speedPerRound:0.028, contactMultiplier:0.45, projectileDamageBase:3, projectileDamagePerRound:0.25, projectileSpeed:4.2, projectileSize:10, shootCooldown:155, behavior:"ranged", effect:"none"},
     {tier:2, unlockRound:20, type:"frost", name:"Guardián de Hielo", label:"HIELO", color:"#4dd0e1", hpBase:120, hpPerRound:18, size:58, speedBase:1.15, speedPerRound:0.09, contactMultiplier:2.2, projectileDamageBase:7, projectileDamagePerRound:0.45, projectileSpeed:4.8, projectileSize:13, shootCooldown:85, behavior:"frost", effect:"slow"},
     {tier:3, unlockRound:30, type:"sand", name:"Coloso de Arena", label:"ARENA", color:"#d6a542", hpBase:260, hpPerRound:25, size:70, speedBase:0.85, speedPerRound:0.055, contactMultiplier:3.0, projectileDamageBase:0, projectileDamagePerRound:0, projectileSpeed:0, projectileSize:0, shootCooldown:0, behavior:"tank", effect:"none"},
     {tier:4, unlockRound:40, type:"poison", name:"Brujo del Pantano", label:"VENENO", color:"#76ff03", hpBase:230, hpPerRound:22, size:60, speedBase:1.05, speedPerRound:0.065, contactMultiplier:2.7, projectileDamageBase:9, projectileDamagePerRound:0.55, projectileSpeed:4.6, projectileSize:14, shootCooldown:78, behavior:"poison", effect:"poison"},
@@ -1589,11 +1624,11 @@ function triggerEnemySpecialAttack(enemy, dx, dy, distance){
     }
 
     if(enemy.type === "archer"){
-        pushEnemyProjectile(enemy, -0.28, 0.8, 2, "none", 1);
-        pushEnemyProjectile(enemy, 0, 1.1, 3, "none", 1);
-        pushEnemyProjectile(enemy, 0.28, 0.8, 2, "none", 1);
+        pushEnemyProjectile(enemy, -0.24, 0.75, 1.2, "none", 0.65);
+        pushEnemyProjectile(enemy, 0, 1.0, 1.6, "none", 0.75);
+        pushEnemyProjectile(enemy, 0.24, 0.75, 1.2, "none", 0.65);
         showEnemySpecialAttackMessage(enemy);
-        enemy.specialCooldown = Math.max(85, 160 - tierPower * 7);
+        enemy.specialCooldown = 300;
         return;
     }
 
@@ -1736,7 +1771,7 @@ function triggerEnemySpecialAttack(enemy, dx, dy, distance){
     }
 
     if(enemy.type === "boss"){
-        let shots = Math.min(16, 7 + (enemy.bossTier || 1));
+        let shots = Math.min(12, 5 + (enemy.bossTier || 1));
         for(let i=0;i<shots;i++){
             let angle = (Math.PI * 2 / shots) * i;
             let center = getEnemyCenter(enemy);
@@ -1749,14 +1784,14 @@ function triggerEnemySpecialAttack(enemy, dx, dy, distance){
                 dx:Math.cos(angle),
                 dy:Math.sin(angle),
                 speed:(enemy.projectileSpeed || 5) + 1.2,
-                damage:(enemy.projectileDamage || 10) + (enemy.bossTier || 1) * 2,
+                damage:(enemy.projectileDamage || 6) + (enemy.bossTier || 1) * 0.8,
                 effect:(enemy.bossTier || 1) >= 3 ? "abyss" : "none",
                 ownerType:"boss",
                 life:185
             });
         }
         showEnemySpecialAttackMessage(enemy);
-        enemy.specialCooldown = Math.max(90, 190 - (enemy.bossTier || 1) * 10);
+        enemy.specialCooldown = Math.max(190, 260 - (enemy.bossTier || 1) * 6);
     }
 }
 
@@ -1901,6 +1936,84 @@ function applyBossReward(bossTier){
     bossRewardMessageTimer = 300;
 }
 
+
+function createBossPortal(enemy){
+    if(bossPortal) return;
+
+    const centerX = enemy.x + enemy.w / 2;
+    const centerY = enemy.y + enemy.h / 2;
+
+    bossPortal = {
+        x:centerX - 45,
+        y:centerY - 55,
+        w:90,
+        h:110,
+        pulse:0,
+        tier:enemy.bossTier || Math.max(1, getRoundTier())
+    };
+
+    bossPortalMessageTimer = 420;
+    hudMessageText && hudMessageText.classList.add("active");
+}
+
+function updateBossPortal(){
+    if(!bossPortal) return;
+
+    bossPortal.pulse += 0.08;
+
+    const playerCenterX = player.x + player.w / 2;
+    const playerCenterY = player.y + player.h / 2;
+    const portalCenterX = bossPortal.x + bossPortal.w / 2;
+    const portalCenterY = bossPortal.y + bossPortal.h / 2;
+    const dx = playerCenterX - portalCenterX;
+    const dy = playerCenterY - portalCenterY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if(distance < 70){
+        bossPortal = null;
+        bossPortalMessageTimer = 0;
+        startNextRound();
+    }
+}
+
+function drawBossPortal(){
+    if(!bossPortal) return;
+
+    const cx = bossPortal.x + bossPortal.w / 2;
+    const cy = bossPortal.y + bossPortal.h / 2;
+    const pulse = Math.sin(bossPortal.pulse) * 8;
+
+    drawShadow(cx, cy + 45, 54, 18, 0.35);
+
+    const gradient = ctx.createRadialGradient(cx, cy, 8, cx, cy, 58 + pulse);
+    gradient.addColorStop(0, "rgba(180,255,255,0.92)");
+    gradient.addColorStop(0.45, "rgba(78,205,255,0.62)");
+    gradient.addColorStop(1, "rgba(111,66,193,0.05)");
+
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, 35 + pulse * 0.5, 52 + pulse, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = "#b8f7ff";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, 39 + pulse * 0.5, 57 + pulse, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(255,255,255,0.8)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, 20 + pulse * 0.35, 34 + pulse * 0.5, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.fillStyle = "white";
+    ctx.font = "bold 16px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText("PORTAL", cx, cy - 70);
+    ctx.textAlign = "left";
+}
+
 function evolvePlayer(){
     if(player.evolved) return;
 
@@ -1977,6 +2090,9 @@ function resetGame(){
 
     coins = 0;
     round = 1;
+    roundBreakActive = false;
+    roundBreakTimer = 0;
+    catTutorialMessageTimer = 0;
     roundEnemyTotal = 0;
     roundEnemiesSpawned = 0;
     roundMaxActiveEnemies = 3;
@@ -2006,6 +2122,7 @@ function resetGame(){
     thrownSpears = [];
     enemyAreaAttacks = [];
     enemies = [];
+    bossPortal = null;
 
     stopCharges();
     axeEffect = null;
@@ -2025,6 +2142,8 @@ function resetGame(){
     bossBattleMessageTimer = 0;
     bossRewardMessageTimer = 0;
     currentBossName = "";
+    bossPortal = null;
+    bossPortalMessageTimer = 0;
     frostEnemyMessageTimer = 0;
     frostEnemyAnnounced = false;
     frostSlowTimer = 0;
@@ -2224,6 +2343,7 @@ function giveEnemyCoin(enemy){
 
     if(enemy.isBoss){
         applyBossReward(enemy.bossTier || Math.floor(round / 10));
+        createBossPortal(enemy);
     }
 
     updateShopText();
@@ -2532,8 +2652,8 @@ function getBossName(tier){
 function spawnBoss(){
     let tier = Math.floor(round / 10);
     let bossName = getBossName(tier);
-    let bossSize = 90 + tier * 8;
-    let bossHp = 650 + tier * 700 + tier * tier * 250;
+    let bossSize = 82 + tier * 6;
+    let bossHp = 420 + tier * 360 + tier * tier * 120;
 
     currentBossName = bossName;
     bossBattleMessageTimer = 260;
@@ -2545,16 +2665,16 @@ function spawnBoss(){
         h:bossSize,
         hp:bossHp,
         maxHp:bossHp,
-        speed:0.75 + tier * 0.15,
+        speed:0.52 + tier * 0.08,
         type:"boss",
         isBoss:true,
         bossTier:tier,
         name:bossName,
-        shootCooldown:70,
-        projectileDamage:8 + tier * 6,
-        projectileSpeed:4.5 + tier * 0.35,
-        projectileSize:14 + tier * 2,
-        contactDamage:enemyDamage * (2.5 + tier * 0.6),
+        shootCooldown:120,
+        projectileDamage:5 + tier * 2.5,
+        projectileSpeed:3.6 + tier * 0.18,
+        projectileSize:12 + tier * 1.2,
+        contactDamage:enemyDamage * (1.4 + tier * 0.30),
         randomX:(Math.random() - 0.5) * 2,
         randomY:(Math.random() - 0.5) * 2,
         changeTimer:Math.floor(Math.random() * 80) + 40,
@@ -2658,7 +2778,7 @@ function spawnSpecialEnemy(type){
         poisonTimer:0,
         poisonDamage:0,
         carHitCooldown:0,
-        specialCooldown:Math.floor(Math.random() * 120) + 80,
+        specialCooldown: type === "archer" ? 300 : Math.floor(Math.random() * 120) + 80,
         dashTimer:0,
         dashDx:0,
         dashDy:0,
@@ -2780,12 +2900,12 @@ function spawnWaveEnemies(forceFill){
 
 function getBossHelperTotal(){
     let tier = Math.max(1, getRoundTier());
-    return Math.min(35, 4 + tier * 3);
+    return Math.min(22, 2 + tier * 2);
 }
 
 function getBossMaxHelpersAlive(){
     let tier = Math.max(1, getRoundTier());
-    return Math.min(8, 2 + tier);
+    return Math.min(5, 1 + Math.ceil(tier / 2));
 }
 
 function spawnBossHelperWave(forceFill){
@@ -2820,6 +2940,8 @@ function spawnBossHelperWave(forceFill){
 }
 
 function updateWaveSpawning(){
+    if(roundBreakActive) return;
+
     if(isBossRound()){
         if(bossHelperSpawnCooldown > 0) bossHelperSpawnCooldown--;
 
@@ -2841,19 +2963,67 @@ function updateWaveSpawning(){
 
 function isRoundCleared(){
     if(isBossRound()){
-        return countAliveBosses() <= 0;
+        return false;
     }
 
     return roundEnemiesSpawned >= roundEnemyTotal && countAliveNonBossEnemies() <= 0;
 }
 
 function startNextRound(){
+    if(roundBreakActive) return;
+    beginRoundBreak();
+}
+
+function beginRoundBreak(){
+    roundBreakActive = true;
+    roundBreakTimer = ROUND_BREAK_FRAMES;
+
     coins += 5;
     roundCoinMessageTimer = 140;
-    updateShopText();
+    updateShopText("Ronda completada: +5 monedas. Descanso de 10 segundos.");
+
+    arrows = [];
+    enemyArrows = [];
+    lightningBolts = [];
+    thrownSpears = [];
+    enemyAreaAttacks = [];
+    enemies = [];
+    bossPortal = null;
+
+    stopCharges();
+    axeEffect = null;
+    spearMeleeEffect = null;
+    magicEffectTimer = 0;
+
+    cat = null;
+    summonUsedThisRound = false;
+    helicopter = null;
+    helicopterUsedThisRound = false;
+    waveMessageTimer = 0;
+}
+
+function updateRoundBreak(){
+    if(!roundBreakActive) return;
+
+    if(roundBreakTimer > 0){
+        roundBreakTimer--;
+    }
+
+    if(roundBreakTimer <= 0){
+        finishRoundBreak();
+    }
+}
+
+function finishRoundBreak(){
+    roundBreakActive = false;
+    roundBreakTimer = 0;
 
     round++;
     unlockUpgradeLimit();
+
+    if(round === 10){
+        catTutorialMessageTimer = 520;
+    }
 
     player.hp += 20;
     if(player.hp > player.maxHp) player.hp = player.maxHp;
@@ -2863,6 +3033,7 @@ function startNextRound(){
     lightningBolts = [];
     thrownSpears = [];
     enemyAreaAttacks = [];
+    bossPortal = null;
 
     stopCharges();
     axeEffect = null;
@@ -2884,6 +3055,7 @@ function spawnEnemies(){
     enemies = [];
     enemyArrows = [];
     enemyAreaAttacks = [];
+    bossPortal = null;
 
     roundEnemyTotal = 0;
     roundEnemiesSpawned = 0;
@@ -2934,6 +3106,11 @@ refreshPlayerStats(false);
 spawnEnemies();
 
 playBtn.onclick = ()=>{
+    const menuTutorial = document.getElementById("menuTutorial");
+    if(menuTutorial){
+        menuTutorial.style.display = "none";
+    }
+
     menu.style.display = "none";
     topHoverZone.style.display = "block";
     topBar.style.display = "flex";
@@ -4063,8 +4240,10 @@ function update(){
 
     if(roundCoinMessageTimer > 0) roundCoinMessageTimer--;
     if(waveMessageTimer > 0) waveMessageTimer--;
+    if(catTutorialMessageTimer > 0) catTutorialMessageTimer--;
     if(bossBattleMessageTimer > 0) bossBattleMessageTimer--;
     if(bossRewardMessageTimer > 0) bossRewardMessageTimer--;
+    if(bossPortalMessageTimer > 0) bossPortalMessageTimer--;
     if(frostEnemyMessageTimer > 0) frostEnemyMessageTimer--;
     if(specialEnemyMessageTimer > 0) specialEnemyMessageTimer--;
     if(enemySpecialAttackMessageTimer > 0) enemySpecialAttackMessageTimer--;
@@ -4082,6 +4261,7 @@ function update(){
     updateProjectiles();
     updateEnemyAreaAttacks();
     updateWaveSpawning();
+    updateBossPortal();
 
     enemies.forEach(enemy=>{
         if(enemy.hp > 0){
@@ -4125,7 +4305,7 @@ function update(){
 
                 if(enemy.shootCooldown <= 0){
                     enemyShoot(enemy);
-                    enemy.shootCooldown = 120;
+                    enemy.shootCooldown = 160;
                 }
             }
 
@@ -4200,7 +4380,7 @@ function update(){
 
                 if(enemy.shootCooldown <= 0){
                     enemyShoot(enemy);
-                    enemy.shootCooldown = Math.max(42, 95 - (enemy.bossTier || 1) * 5);
+                    enemy.shootCooldown = Math.max(90, 150 - (enemy.bossTier || 1) * 4);
                 }
             }
 
@@ -4240,6 +4420,11 @@ function update(){
             }
         }
     });
+
+    if(roundBreakActive){
+        updateRoundBreak();
+        return;
+    }
 
     if(isRoundCleared()){
         startNextRound();
@@ -4908,6 +5093,10 @@ function drawWorldSortedEntities(){
         items.push({y:helicopter.y + helicopter.h + 1000, draw:drawHelicopter});
     }
 
+    if(bossPortal){
+        items.push({y:bossPortal.y + bossPortal.h, draw:drawBossPortal});
+    }
+
     enemies.forEach(enemy=>{
         if(enemy.hp > 0){
             items.push({y:enemy.y + enemy.h, draw:()=>drawEnemy(enemy)});
@@ -5038,6 +5227,14 @@ function updateHudBar(){
     }
     hudHpFill.style.width = (hpPercent * 100) + "%";
 
+    if(hudUpgradeText){
+        let summonText = summonUnlocked ? ("Gato " + summonLevel + "/" + maxSummonLevel + " $" + SHOP_SUMMON_COST) : "Gato 🔒 R10 $" + SHOP_SUMMON_COST;
+        hudUpgradeText.textContent = "F " + upgradeLevels.damage + "/" + maxUpgradeLevel + " $" + SHOP_DAMAGE_COST +
+            " · Vel " + upgradeLevels.speed + "/" + maxUpgradeLevel + " $" + SHOP_SPEED_COST +
+            " · Vida " + upgradeLevels.hp + "/" + maxUpgradeLevel + " $" + SHOP_HP_COST +
+            " · " + summonText;
+    }
+
     hudMapName.textContent = getCurrentMap().name;
     if(hudRoundText){
         if(lastHudRoundForAnimation !== round){
@@ -5051,12 +5248,24 @@ function updateHudBar(){
         hudRoundText.textContent = "RONDA " + round;
     }
 
-    if(isBossRound()){
+    if(roundBreakActive){
+        const secondsLeft = Math.max(0, Math.ceil(roundBreakTimer / 60));
+        const elapsed = 1 - Math.max(0, Math.min(1, roundBreakTimer / ROUND_BREAK_FRAMES));
+        hudWaveTitle.textContent = "Descanso";
+        hudWaveText.textContent = "Siguiente ronda en " + secondsLeft + "s";
+        hudWaveFill.style.width = (elapsed * 100) + "%";
+    }else if(isBossRound()){
         const boss = enemies.find(enemy=>enemy.hp > 0 && enemy.isBoss);
-        const bossHpPercent = boss ? Math.max(0, Math.min(1, boss.hp / Math.max(1, boss.maxHp || boss.hp))) : 1;
-        hudWaveTitle.textContent = "Jefe";
-        hudWaveText.textContent = (currentBossName || getBossName(Math.max(1, getRoundTier()))) + " · " + Math.round(bossHpPercent * 100) + "%";
-        hudWaveFill.style.width = (bossHpPercent * 100) + "%";
+        if(bossPortal && !boss){
+            hudWaveTitle.textContent = "Portal";
+            hudWaveText.textContent = "Entra para avanzar";
+            hudWaveFill.style.width = "100%";
+        }else{
+            const bossHpPercent = boss ? Math.max(0, Math.min(1, boss.hp / Math.max(1, boss.maxHp || boss.hp))) : 1;
+            hudWaveTitle.textContent = "Jefe";
+            hudWaveText.textContent = (currentBossName || getBossName(Math.max(1, getRoundTier()))) + " · " + Math.round(bossHpPercent * 100) + "%";
+            hudWaveFill.style.width = (bossHpPercent * 100) + "%";
+        }
     }else{
         const defeated = Math.max(0, roundEnemiesSpawned - countAliveNonBossEnemies());
         const progress = roundEnemyTotal > 0 ? Math.max(0, Math.min(1, defeated / roundEnemyTotal)) : 0;
@@ -5069,7 +5278,17 @@ function updateHudBar(){
     }
 
     if(hudMessageText){
-        if(waveMessageTimer > 0){
+        if(bossPortalMessageTimer > 0 && bossPortal){
+            hudMessageText.textContent = "✨ Jefe derrotado: entra al PORTAL para ir al siguiente mapa";
+            hudMessageText.classList.add("active");
+        }else if(catTutorialMessageTimer > 0){
+            hudMessageText.textContent = "Ronda 10: Q invoca gato · 4 mejora gato";
+            hudMessageText.classList.add("active");
+        }else if(roundBreakActive){
+            const catTip = summonUnlocked ? (" · 4 Gato $" + SHOP_SUMMON_COST) : " · 4 Gato $" + SHOP_SUMMON_COST + " en R10";
+            hudMessageText.textContent = "Descanso: 1 Fuerza $" + SHOP_DAMAGE_COST + " · 2 Velocidad $" + SHOP_SPEED_COST + " · 3 Vida $" + SHOP_HP_COST + catTip;
+            hudMessageText.classList.add("active");
+        }else if(waveMessageTimer > 0){
             hudMessageText.textContent = "⚔ NUEVA OLEADA";
             hudMessageText.classList.add("active");
         }else{
