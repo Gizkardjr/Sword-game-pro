@@ -204,7 +204,8 @@ const SOLID_DECORATION_TYPES = new Set([
     "cactus","deadTree","stump","crate",
     "pillar","obelisk","statue",
     "crystalRed","crystalPurple","iceCrystal",
-    "ruin","house"
+    "ruin","house",
+    "mazeWall"
 ]);
 
 function isSolidDecoration(decor){
@@ -213,6 +214,10 @@ function isSolidDecoration(decor){
 
 function getDecorationObstacleBox(decor){
     if(!isSolidDecoration(decor)) return null;
+
+    if(decor.type === "mazeWall"){
+        return {x:decor.x, y:decor.y, w:decor.w || 80, h:decor.h || 80};
+    }
 
     const s = decor.size || 1;
     const x = decor.x;
@@ -311,8 +316,9 @@ function keepEntityInsideWorld(entity){
 }
 
 function moveEntityWithObstacleCollision(entity, dx, dy){
-    if(!entity) return;
+    if(!entity) return false;
 
+    let blocked = false;
     const oldX = entity.x;
     const oldY = entity.y;
 
@@ -322,6 +328,7 @@ function moveEntityWithObstacleCollision(entity, dx, dy){
 
         if(collidesWithWorldObstacle(entity)){
             entity.x = oldX;
+            blocked = true;
         }
     }
 
@@ -331,8 +338,11 @@ function moveEntityWithObstacleCollision(entity, dx, dy){
 
         if(collidesWithWorldObstacle(entity)){
             entity.y = oldY;
+            blocked = true;
         }
     }
+
+    return blocked;
 }
 
 function resolveEntityObstacleCollision(entity){
@@ -381,6 +391,8 @@ function findOpenPosition(x,y,w,h){
 }
 
 function rebuildWorldDecorations(){
+    if(mazePhaseActive) return;
+
     const map = getCurrentMap();
     const tier = Math.max(0, getRoundTier());
     const key = map.type + "_" + tier;
@@ -595,6 +607,10 @@ let bossRewardMessageTimer = 0;
 let currentBossName = "";
 let bossPortal = null;
 let bossPortalMessageTimer = 0;
+let mazePhaseActive = false;
+let mazeMessageTimer = 0;
+let mazeDestroyPulse = 0;
+let mazeEscapeStartedRound = 0;
 let frostEnemyMessageTimer = 0;
 let frostEnemyAnnounced = false;
 let frostSlowTimer = 0;
@@ -1102,22 +1118,165 @@ function applyBossReward(bossTier){
 
 
 function createBossPortal(enemy){
-    if(bossPortal) return;
+    startMazeEscape(enemy);
+}
 
-    const centerX = enemy.x + enemy.w / 2;
-    const centerY = enemy.y + enemy.h / 2;
+function makeMazeWall(x,y,w,h,variant){
+    return {
+        type:"mazeWall",
+        x:x,
+        y:y,
+        w:w,
+        h:h,
+        size:1,
+        depthY:y + h,
+        variant:variant || 0
+    };
+}
+
+function startMazeEscape(enemy){
+    if(mazePhaseActive || bossPortal) return;
+
+    mazePhaseActive = true;
+    mazeMessageTimer = 720;
+    bossPortalMessageTimer = 720;
+    mazeDestroyPulse = 0;
+    mazeEscapeStartedRound = round;
+
+    // El jefe ya cayó: se limpian ayudantes y proyectiles para que empiece la huida.
+    enemies = [];
+    arrows = [];
+    enemyArrows = [];
+    lightningBolts = [];
+    thrownSpears = [];
+    enemyAreaAttacks = [];
+    bossHelpersSpawned = bossHelperTotal;
+    waveMessageTimer = 0;
+
+    stopCharges();
+    axeEffect = null;
+    spearMeleeEffect = null;
+    magicEffectTimer = 0;
+    cat = null;
+    summonUsedThisRound = false;
+    helicopter = null;
+    helicopterUsedThisRound = false;
+
+    buildBossEscapeMaze(enemy);
+    updateShopText("¡El mundo se está destruyendo! Cruza el laberinto y entra al portal.");
+}
+
+function buildBossEscapeMaze(enemy){
+    const worldW = getWorldWidth();
+    const worldH = getWorldHeight();
+    const cell = 150;
+    const cols = Math.max(10, Math.floor((worldW - 220) / cell));
+    const rows = Math.max(7, Math.floor((worldH - 220) / cell));
+    const mazeW = cols * cell;
+    const mazeH = rows * cell;
+    const originX = Math.floor((worldW - mazeW) / 2);
+    const originY = Math.floor((worldH - mazeH) / 2);
+
+    worldDecorations = [];
+    worldDecorationKey = "maze_escape_" + round;
+
+    const open = new Set();
+
+    // Laberinto tipo serpiente, pero empezando ARRIBA a la izquierda.
+    // Antes el jugador podía aparecer en una zona cerrada junto a la pared superior.
+    // Ahora la primera fila queda libre para que siempre puedas avanzar.
+    for(let r=0; r<rows; r++){
+        if(r % 2 === 0){
+            for(let c=0; c<cols; c++){
+                open.add(c + "," + r);
+            }
+        }else{
+            const connector = Math.floor(r / 2) % 2 === 0 ? cols - 1 : 0;
+            open.add(connector + "," + r);
+        }
+    }
+
+    for(let r=0; r<rows; r++){
+        for(let c=0; c<cols; c++){
+            if(open.has(c + "," + r)) continue;
+
+            const wallX = originX + c * cell + 9;
+            const wallY = originY + r * cell + 9;
+            worldDecorations.push(makeMazeWall(wallX, wallY, cell - 18, cell - 18, (c + r + round) % 4));
+        }
+    }
+
+    // Muros exteriores para que se sienta como un laberinto cerrado.
+    worldDecorations.push(makeMazeWall(originX - 60, originY - 60, mazeW + 120, 48, 0));
+    worldDecorations.push(makeMazeWall(originX - 60, originY + mazeH + 12, mazeW + 120, 48, 1));
+    worldDecorations.push(makeMazeWall(originX - 60, originY - 60, 48, mazeH + 120, 2));
+    worldDecorations.push(makeMazeWall(originX + mazeW + 12, originY - 60, 48, mazeH + 120, 3));
+
+    const startCell = {c:0, r:0};
+    let exitCell = {c:cols - 1, r:rows - 1};
+
+    if((rows - 1) % 2 === 0){
+        const evenPathIndex = Math.floor((rows - 1) / 2);
+        exitCell.c = evenPathIndex % 2 === 0 ? cols - 1 : 0;
+    }else{
+        exitCell.c = Math.floor((rows - 1) / 2) % 2 === 0 ? cols - 1 : 0;
+    }
+
+    player.x = originX + startCell.c * cell + cell / 2 - player.w / 2;
+    player.y = originY + startCell.r * cell + cell / 2 - player.h / 2;
+    keepPlayerInside();
 
     bossPortal = {
-        x:centerX - 45,
-        y:centerY - 55,
+        x:originX + exitCell.c * cell + cell / 2 - 45,
+        y:originY + exitCell.r * cell + cell / 2 - 55,
         w:90,
         h:110,
         pulse:0,
-        tier:enemy.bossTier || Math.max(1, getRoundTier())
+        tier:enemy ? (enemy.bossTier || Math.max(1, getRoundTier())) : Math.max(1, getRoundTier()),
+        mazeExit:true
     };
 
-    bossPortalMessageTimer = 420;
-    hudMessageText && hudMessageText.classList.add("active");
+    camera.x = clamp(player.x + player.w / 2 - canvas.width / 2, 0, Math.max(0, getWorldWidth() - canvas.width));
+    camera.y = clamp(player.y + player.h / 2 - canvas.height / 2, 0, Math.max(0, getWorldHeight() - canvas.height));
+}
+
+function finishMazeEscapeToNextWorld(){
+    mazePhaseActive = false;
+    mazeMessageTimer = 0;
+    mazeDestroyPulse = 0;
+    mazeEscapeStartedRound = 0;
+    bossPortal = null;
+    bossPortalMessageTimer = 0;
+    roundBreakActive = false;
+    roundBreakTimer = 0;
+
+    round++;
+    unlockUpgradeLimit();
+
+    player.hp += Math.max(30, Math.floor(player.maxHp * 0.20));
+    if(player.hp > player.maxHp) player.hp = player.maxHp;
+
+    arrows = [];
+    enemyArrows = [];
+    lightningBolts = [];
+    thrownSpears = [];
+    enemyAreaAttacks = [];
+    enemies = [];
+
+    stopCharges();
+    axeEffect = null;
+    spearMeleeEffect = null;
+    magicEffectTimer = 0;
+    cat = null;
+    summonUsedThisRound = false;
+    helicopter = null;
+    helicopterUsedThisRound = false;
+
+    coins += 5;
+    roundCoinMessageTimer = 140;
+    worldDecorationKey = "";
+    updateShopText("Entraste al siguiente mundo. +5 monedas por completar el laberinto.");
+    spawnEnemies();
 }
 
 function updateBossPortal(){
@@ -1134,9 +1293,13 @@ function updateBossPortal(){
     const distance = Math.sqrt(dx * dx + dy * dy);
 
     if(distance < 70){
-        bossPortal = null;
-        bossPortalMessageTimer = 0;
-        startNextRound();
+        if(mazePhaseActive){
+            finishMazeEscapeToNextWorld();
+        }else{
+            bossPortal = null;
+            bossPortalMessageTimer = 0;
+            startNextRound();
+        }
     }
 }
 
@@ -1174,7 +1337,7 @@ function drawBossPortal(){
     ctx.fillStyle = "white";
     ctx.font = "bold 16px Arial";
     ctx.textAlign = "center";
-    ctx.fillText("PORTAL", cx, cy - 70);
+    ctx.fillText(mazePhaseActive ? "SALIDA" : "PORTAL", cx, cy - 70);
     ctx.textAlign = "left";
 }
 
@@ -1287,6 +1450,12 @@ function resetGame(){
     enemyAreaAttacks = [];
     enemies = [];
     bossPortal = null;
+    bossPortalMessageTimer = 0;
+    mazePhaseActive = false;
+    mazeMessageTimer = 0;
+    mazeDestroyPulse = 0;
+    mazeEscapeStartedRound = 0;
+    worldDecorationKey = "";
 
     stopCharges();
     axeEffect = null;
@@ -2106,7 +2275,7 @@ function spawnBossHelperWave(forceFill){
 }
 
 function updateWaveSpawning(){
-    if(roundBreakActive) return;
+    if(roundBreakActive || mazePhaseActive) return;
 
     if(isBossRound()){
         if(bossHelperSpawnCooldown > 0) bossHelperSpawnCooldown--;
@@ -2200,6 +2369,8 @@ function finishRoundBreak(){
     thrownSpears = [];
     enemyAreaAttacks = [];
     bossPortal = null;
+    mazePhaseActive = false;
+    mazeMessageTimer = 0;
 
     stopCharges();
     axeEffect = null;
@@ -2222,6 +2393,8 @@ function spawnEnemies(){
     enemyArrows = [];
     enemyAreaAttacks = [];
     bossPortal = null;
+    mazePhaseActive = false;
+    mazeMessageTimer = 0;
 
     roundEnemyTotal = 0;
     roundEnemiesSpawned = 0;
@@ -3433,6 +3606,8 @@ function update(){
     if(bossBattleMessageTimer > 0) bossBattleMessageTimer--;
     if(bossRewardMessageTimer > 0) bossRewardMessageTimer--;
     if(bossPortalMessageTimer > 0) bossPortalMessageTimer--;
+    if(mazeMessageTimer > 0) mazeMessageTimer--;
+    if(mazePhaseActive) mazeDestroyPulse += 0.045;
     if(frostEnemyMessageTimer > 0) frostEnemyMessageTimer--;
     if(specialEnemyMessageTimer > 0) specialEnemyMessageTimer--;
     if(enemySpecialAttackMessageTimer > 0) enemySpecialAttackMessageTimer--;
@@ -3582,7 +3757,12 @@ function update(){
                 enemy.dashTimer--;
             }
 
-            moveEntityWithObstacleCollision(enemy, enemyMoveX, enemyMoveY);
+            const enemyBlockedByObstacle = moveEntityWithObstacleCollision(enemy, enemyMoveX, enemyMoveY);
+            if(enemyBlockedByObstacle){
+                enemy.randomX = (Math.random() - 0.5) * 3;
+                enemy.randomY = (Math.random() - 0.5) * 3;
+                enemy.changeTimer = Math.floor(Math.random() * 45) + 25;
+            }
 
             if(collidesWithWorldObstacle(enemy)){
                 resolveEntityObstacleCollision(enemy);
@@ -4066,6 +4246,46 @@ function getCurrentMap(){
     return maps[mapIndex];
 }
 
+function drawMazeDestructionEffects(){
+    if(!mazePhaseActive) return;
+
+    const worldW = getWorldWidth();
+    const worldH = getWorldHeight();
+    const pulse = 0.35 + Math.sin(mazeDestroyPulse) * 0.12;
+
+    ctx.save();
+    ctx.globalAlpha = 0.20 + pulse * 0.22;
+    ctx.fillStyle = "#ff2a00";
+    ctx.fillRect(0, 0, worldW, worldH);
+    ctx.restore();
+
+    ctx.save();
+    ctx.strokeStyle = "rgba(255,120,30,0.55)";
+    ctx.lineWidth = 5;
+    for(let i=0;i<38;i++){
+        const x = seededRandom(i * 77 + round * 33) * worldW;
+        const y = seededRandom(i * 91 + round * 21) * worldH;
+        const len = 60 + seededRandom(i * 13) * 170;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + len * 0.35, y + len * 0.20);
+        ctx.lineTo(x + len * 0.55, y + len * 0.55);
+        ctx.stroke();
+    }
+    ctx.restore();
+
+    ctx.save();
+    ctx.fillStyle = "rgba(255,235,59,0.70)";
+    for(let i=0;i<28;i++){
+        const x = seededRandom(i * 41 + round * 9) * worldW;
+        const y = seededRandom(i * 59 + Math.floor(mazeDestroyPulse * 10)) * worldH;
+        ctx.beginPath();
+        ctx.arc(x, y, 3 + seededRandom(i * 17) * 6, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.restore();
+}
+
 function drawMap(){
     rebuildWorldDecorations();
     let map = getCurrentMap();
@@ -4162,6 +4382,8 @@ function drawMap(){
     ctx.strokeStyle = "rgba(255,255,255,0.18)";
     ctx.lineWidth = 10;
     ctx.strokeRect(5, 5, worldW - 10, worldH - 10);
+
+    drawMazeDestructionEffects();
 }
 
 
@@ -4169,6 +4391,29 @@ function drawDecoration(decor){
     const x = decor.x;
     const y = decor.y;
     const s = decor.size || 1;
+
+    if(decor.type === "mazeWall"){
+        const w = decor.w || 90;
+        const h = decor.h || 90;
+        const cx = x + w / 2;
+        const cy = y + h / 2;
+        drawShadow(cx, y + h + 8, Math.max(28, w * 0.35), 14, 0.34);
+        fillRoundRect(x, y, w, h, 10, "#291018");
+        ctx.fillStyle = "rgba(255,76,41,0.20)";
+        ctx.fillRect(x + 8, y + 8, Math.max(4, w - 16), Math.max(4, h - 16));
+        ctx.strokeStyle = "#ff7043";
+        ctx.lineWidth = 3;
+        roundRectPath(x, y, w, h, 10);
+        ctx.stroke();
+        ctx.strokeStyle = "rgba(255,235,59,0.55)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x + w * 0.18, y + h * 0.30);
+        ctx.lineTo(x + w * 0.46, y + h * 0.45);
+        ctx.lineTo(x + w * 0.33, y + h * 0.75);
+        ctx.stroke();
+        return;
+    }
 
     drawShadow(x, y + 8*s, 24*s, 9*s, 0.26);
 
@@ -4278,7 +4523,11 @@ function drawWorldSortedEntities(){
 
     worldDecorations.forEach(decor=>{
         // Solo dibuja objetos cercanos a la cámara para mejorar rendimiento.
-        if(decor.x > camera.x - 180 && decor.x < camera.x + canvas.width + 180 && decor.y > camera.y - 220 && decor.y < camera.y + canvas.height + 160){
+        const left = decor.type === "mazeWall" ? decor.x : decor.x - 120;
+        const right = decor.type === "mazeWall" ? decor.x + (decor.w || 80) : decor.x + 120;
+        const top = decor.type === "mazeWall" ? decor.y : decor.y - 140;
+        const bottom = decor.type === "mazeWall" ? decor.y + (decor.h || 80) : decor.y + 120;
+        if(right > camera.x - 180 && left < camera.x + canvas.width + 180 && bottom > camera.y - 220 && top < camera.y + canvas.height + 160){
             items.push({y:decor.depthY, draw:()=>drawDecoration(decor)});
         }
     });
@@ -4446,7 +4695,18 @@ function updateHudBar(){
         hudRoundText.textContent = "RONDA " + round;
     }
 
-    if(roundBreakActive){
+    if(mazePhaseActive && bossPortal){
+        const pc = getPlayerCenter();
+        const portalCenterX = bossPortal.x + bossPortal.w / 2;
+        const portalCenterY = bossPortal.y + bossPortal.h / 2;
+        const dx = pc.x - portalCenterX;
+        const dy = pc.y - portalCenterY;
+        const distanceToPortal = Math.sqrt(dx * dx + dy * dy);
+        const progress = 1 - Math.max(0, Math.min(1, distanceToPortal / Math.max(getWorldWidth(), getWorldHeight())));
+        hudWaveTitle.textContent = "Laberinto";
+        hudWaveText.textContent = "Mundo destruyéndose · busca la salida";
+        hudWaveFill.style.width = (progress * 100) + "%";
+    }else if(roundBreakActive){
         const secondsLeft = Math.max(0, Math.ceil(roundBreakTimer / 60));
         const elapsed = 1 - Math.max(0, Math.min(1, roundBreakTimer / ROUND_BREAK_FRAMES));
         hudWaveTitle.textContent = "Descanso";
@@ -4476,7 +4736,10 @@ function updateHudBar(){
     }
 
     if(hudMessageText){
-        if(bossPortalMessageTimer > 0 && bossPortal){
+        if(mazePhaseActive && bossPortal){
+            hudMessageText.textContent = "⚠ El mundo se destruye: cruza el laberinto y entra al portal";
+            hudMessageText.classList.add("active");
+        }else if(bossPortalMessageTimer > 0 && bossPortal){
             hudMessageText.textContent = "✨ Jefe derrotado: entra al PORTAL para ir al siguiente mapa";
             hudMessageText.classList.add("active");
         }else if(catTutorialMessageTimer > 0){

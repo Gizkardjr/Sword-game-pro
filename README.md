@@ -47,8 +47,8 @@ E = poder especial de algunos personajes
 
 - Ganas monedas derrotando enemigos y completando rondas.
 - Cada 10 rondas aparece un jefe.
-- Al derrotar un jefe aparece un portal.
-- Entra al portal para avanzar al siguiente mapa.
+- Al derrotar un jefe, el mundo empieza a destruirse y aparece un laberinto de escape.
+- Cruza el laberinto y entra al portal final para avanzar al siguiente mapa.
 - Las mejoras y desbloqueos se muestran en el HUD superior.
 
 ## Mapas
@@ -87,3 +87,20 @@ En esta versión, varias decoraciones del mapa ya funcionan como obstáculos:
 - Cajas y troncos
 
 El jugador, enemigos y mascota no pueden atravesarlos. Los proyectiles normales también se detienen cuando chocan con estos objetos.
+
+
+## Laberinto después del jefe
+
+Cada 10 rondas aparece un jefe. Cuando lo derrotas, el mapa entra en modo destrucción:
+
+- Se limpian los enemigos restantes.
+- Aparece un laberinto de muros reales.
+- El jugador debe cruzar el laberinto.
+- El portal está al final del laberinto.
+- Al entrar al portal, el juego avanza al siguiente mundo.
+
+Los muros del laberinto usan el mismo sistema de colisiones reales que los árboles, piedras y rocas.
+
+### Corrección del laberinto
+
+El laberinto de escape ahora empieza con la primera fila abierta desde la esquina superior izquierda. Esto evita que el jugador aparezca atrapado contra una pared al iniciar la fase de destrucción del mundo.
